@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(
-		scanBasePackages = {"com.playground.api", "com.playground.utils"}
+		scanBasePackages = {"com.playground.api"}
 )
 public class ApiApplication {
 

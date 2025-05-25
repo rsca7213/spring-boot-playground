@@ -9,30 +9,17 @@ import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
+                ex.getStatusCode().value(),
+                ex.getStatusCode().getReasonPhrase(),
                 ex.getMessage(),
                 LocalDateTime.now(),
                 ex.getErrorCode()
         );
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(UnsupportedException.class)
-    public ResponseEntity<ErrorResponse> handleUnsupportedException(UnsupportedException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.NOT_IMPLEMENTED.value(),
-                HttpStatus.NOT_IMPLEMENTED.getReasonPhrase(),
-                ex.getMessage(),
-                LocalDateTime.now(),
-                ex.getErrorCode()
-        );
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<>(errorResponse, ex.getStatusCode());
     }
 
 }

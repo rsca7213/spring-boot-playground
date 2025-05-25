@@ -7,7 +7,7 @@ import lombok.Value;
 import org.hibernate.validator.constraints.URL;
 
 @Value
-public class CreateProductRequestBodyDto {
+public class CreateProductBody {
     @NotBlank
     @Size(min = 3, max = 100)
     String name;

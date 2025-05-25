@@ -6,7 +6,7 @@ import lombok.Value;
 import java.util.UUID;
 
 @Value
-public class CreateProductResponseBodyDto {
+public class CreateProductResponse {
     UUID id;
     String name;
     String description;

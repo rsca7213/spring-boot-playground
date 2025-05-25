@@ -1,19 +1,23 @@
 package com.playground.api.services;
 
-import com.playground.api.dtos.common.PaginationQuery;
 import com.playground.api.dtos.common.PaginationResponse;
 import com.playground.api.dtos.product.CreateProductBody;
 import com.playground.api.dtos.product.CreateProductResponse;
+import com.playground.api.dtos.product.ListProductsQuery;
 import com.playground.api.dtos.product.ListProductsResponse;
 import com.playground.api.enums.ErrorCode;
-import com.playground.api.exceptions.ConflictException;
+import com.playground.api.exceptions.Exception;
 import com.playground.api.mappers.CreateProductMapper;
 import com.playground.api.mappers.ListProductsMapper;
 import com.playground.api.models.Product;
 import com.playground.api.repositories.ProductRepository;
+import com.playground.api.repositories.specifications.ProductSpecifications;
 import com.playground.api.utils.PaginationUtils;
+import com.playground.api.utils.SpecificationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,7 +42,7 @@ public class ProductService {
 
         // If a product with the same name exists, throw an exception
         if (existingProduct.isPresent()) {
-            throw new ConflictException("A product with the same name already exists", ErrorCode.ITEM_ALREADY_EXISTS);
+            throw new Exception("A product with the same name already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
         }
 
         // Create a new product entity
@@ -52,11 +56,23 @@ public class ProductService {
     }
 
     public PaginationResponse<ListProductsResponse> listProducts(
-            PaginationQuery pagination
+            ListProductsQuery request
     ) {
-        // Fetch all the from the repository
+        // Create a specification for filtering products
+        Specification<Product> specification = Specification.where(null);
+
+        // Add filters to the specification based on the request
+        specification
+                .and(SpecificationUtils.optional(request.getName(), ProductSpecifications::nameContains))
+                .and(SpecificationUtils.optional(request.getCategory(), ProductSpecifications::inCategory))
+                .and(SpecificationUtils.optional(request.getHasStock(), ProductSpecifications::hasStock))
+                .and(SpecificationUtils.optional(request.getMinPrice(), ProductSpecifications::priceAtLeast))
+                .and(SpecificationUtils.optional(request.getMaxPrice(), ProductSpecifications::priceAtMost));
+
+        // Fetch all the products from the repository with given filters
         Page<Product> products = productRepository.findAll(
-                PaginationUtils.getPaginationFilters(pagination)
+                specification,
+                PaginationUtils.getPaginationFilters(request)
         );
 
         // Map the products to the response DTO

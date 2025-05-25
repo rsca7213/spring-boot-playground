@@ -4,6 +4,7 @@ import com.playground.api.dtos.common.PaginationQuery;
 import com.playground.api.dtos.common.PaginationResponse;
 import com.playground.api.dtos.product.CreateProductBody;
 import com.playground.api.dtos.product.CreateProductResponse;
+import com.playground.api.dtos.product.ListProductsQuery;
 import com.playground.api.dtos.product.ListProductsResponse;
 import com.playground.api.services.ProductService;
 import jakarta.validation.Valid;
@@ -28,7 +29,7 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<PaginationResponse<ListProductsResponse>> listProducts(@ModelAttribute PaginationQuery pagination) {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.listProducts(pagination));
+    public ResponseEntity<PaginationResponse<ListProductsResponse>> listProducts(@ModelAttribute ListProductsQuery requestQuery) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.listProducts(requestQuery));
     }
 }

@@ -1,9 +1,9 @@
 package com.playground.api.dtos.common;
 
 import jakarta.validation.constraints.Min;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 public class PaginationQuery {
     @Min(value = 1)
     Integer page = 1;

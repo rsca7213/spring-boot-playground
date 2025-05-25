@@ -21,17 +21,7 @@ public class CreateProductMapper implements RequestMapper<CreateProductRequestBo
     }
 
     @Override
-    public Class<CreateProductRequestBodyDto> getRequestType() {
-        return CreateProductRequestBodyDto.class;
-    }
-
-    @Override
     public CreateProductResponseBodyDto modelToResponse(Product product) {
         return new CreateProductResponseBodyDto(product.getId(), product.getName(), product.getDescription(), product.getPrice(), product.getCategory(), product.getStockQuantity(), product.getImageUrl());
-    }
-
-    @Override
-    public Class<CreateProductResponseBodyDto> getResponseType() {
-        return CreateProductResponseBodyDto.class;
     }
 }

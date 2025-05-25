@@ -78,13 +78,13 @@ public class ProductService {
                 .and(SpecificationUtils.optional(request.getMaxPrice(), ProductSpecifications::priceAtMost));
 
         // Fetch all the products from the repository with given filters
-        Page<Product> products = productRepository.findAll(
+        Page<Product> page = productRepository.findAll(
                 specification,
                 PaginationUtils.getPaginationFilters(request)
         );
 
         // Map the products to the response DTO
-        List<ListProductsResponse> response = products.getContent().stream().map(
+        List<ListProductsResponse> response = page.getContent().stream().map(
                 product -> new ListProductsResponse(
                         product.getId(),
                         product.getName(),
@@ -97,6 +97,6 @@ public class ProductService {
         ).toList();
 
         // Create pagination response and return it
-        return PaginationUtils.getPaginationResponse(products, response);
+        return PaginationUtils.getPaginationResponse(page, response);
     }
 }

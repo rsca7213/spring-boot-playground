@@ -16,7 +16,7 @@ public class PaginationUtils {
     }
 
     public static <P, T> PaginationResponse<T> getPaginationResponse(Page<P> page, List<T> items) {
-        PaginationResponse<T> pagination = new PaginationResponse<T>(
+        PaginationResponse<T> pagination = new PaginationResponse<>(
                 page.getNumber() + 1,
                 page.getSize(),
                 page.getTotalElements(),

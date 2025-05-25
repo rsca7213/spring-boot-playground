@@ -1,7 +1,10 @@
 package com.playground.api.controllers;
 
-import com.playground.api.dtos.product.CreateProductRequestBodyDto;
-import com.playground.api.dtos.product.CreateProductResponseBodyDto;
+import com.playground.api.dtos.common.PaginationQuery;
+import com.playground.api.dtos.common.PaginationResponse;
+import com.playground.api.dtos.product.CreateProductBody;
+import com.playground.api.dtos.product.CreateProductResponse;
+import com.playground.api.dtos.product.ListProductsResponse;
 import com.playground.api.services.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +23,12 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<CreateProductResponseBodyDto> createProduct(@Valid @RequestBody CreateProductRequestBodyDto requestBody) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(productService.createProduct(requestBody));
+    public ResponseEntity<CreateProductResponse> createProduct(@Valid @RequestBody CreateProductBody requestBody) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(requestBody));
+    }
+
+    @GetMapping
+    public ResponseEntity<PaginationResponse<ListProductsResponse>> listProducts(@ModelAttribute PaginationQuery pagination) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.listProducts(pagination));
     }
 }

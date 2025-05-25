@@ -3,10 +3,7 @@ package com.playground.api.models;
 import com.playground.api.enums.ProductCategory;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.URL;
 
 import java.util.UUID;

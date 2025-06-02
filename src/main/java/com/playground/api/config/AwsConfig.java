@@ -22,16 +22,11 @@ public class AwsConfig {
 
     @Bean
     S3Client s3Client() {
-        AwsCredentialsProvider awsCredentialsProvider = new AwsCredentialsProvider() {
-            @Override
-            public AwsCredentials resolveCredentials() {
-                return AwsBasicCredentials
-                        .builder()
-                        .accessKeyId(accessKey)
-                        .secretAccessKey(secretKey)
-                        .build();
-            }
-        };
+        AwsCredentialsProvider awsCredentialsProvider = () -> AwsBasicCredentials
+                .builder()
+                .accessKeyId(accessKey)
+                .secretAccessKey(secretKey)
+                .build();
 
         return S3Client.builder().credentialsProvider(awsCredentialsProvider).region(Region.of(region)).build();
     }

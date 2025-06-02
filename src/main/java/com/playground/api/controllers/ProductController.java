@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/products")
@@ -32,5 +33,13 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<FindProductResponse> findProductById(@ModelAttribute FindProductParams requestParams) {
         return ResponseEntity.status(HttpStatus.OK).body(productService.findProductById(requestParams.getId()));
+    }
+
+    @PutMapping("/{id}/image")
+    public ResponseEntity<UploadProductImageResponse>  uploadProductImage(
+            @ModelAttribute UploadProductImageParams requestParams,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.uploadProductImage(requestParams.getId(), file));
     }
 }

@@ -4,9 +4,11 @@ import com.playground.api.dtos.common.PaginationResponse;
 import com.playground.api.dtos.product.*;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.Exception;
+import com.playground.api.integrations.ports.MultimediaStorageService;
 import com.playground.api.models.Product;
 import com.playground.api.repositories.ProductRepository;
 import com.playground.api.repositories.specifications.ProductSpecifications;
+import com.playground.api.utils.FileUtils;
 import com.playground.api.utils.PaginationUtils;
 import com.playground.api.utils.SpecificationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,10 +26,15 @@ import java.util.UUID;
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final MultimediaStorageService multimediaStorageService;
 
     @Autowired
-    public ProductService(final ProductRepository productRepository) {
+    public ProductService(
+            final ProductRepository productRepository,
+            final MultimediaStorageService multimediaStorageService
+    ) {
         this.productRepository = productRepository;
+        this.multimediaStorageService = multimediaStorageService;
     }
 
     public CreateProductResponse createProduct(CreateProductBody request) {
@@ -50,7 +59,7 @@ public class ProductService {
         product = productRepository.save(product);
 
         // Return the created product
-       return new CreateProductResponse(
+        return new CreateProductResponse(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
@@ -114,5 +123,40 @@ public class ProductService {
                 product.getStockQuantity(),
                 product.getImageUrl()
         );
+    }
+
+    public UploadProductImageResponse uploadProductImage(UUID id, MultipartFile file) {
+        // Define allowed product image types
+        final List<String> ALLOWED_IMAGE_MIME_TYPES = Arrays.asList(
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+        );
+
+        // Verify that the file is not empty
+        if (file.isEmpty()) {
+            throw new Exception("The uploaded file is empty", ErrorCode.FILE_CONTENT_ERROR, HttpStatus.BAD_REQUEST);
+        }
+
+        // Validate the file and extract the extension
+        String fileExtension = FileUtils.validateAndExtractFileExtension(file, ALLOWED_IMAGE_MIME_TYPES);
+
+        // Generate the filename (product's ID with extension)
+        String fileName = String.format("products/%s.%s", id, fileExtension);
+
+        // Verify that the product by given ID exists
+        Product product = productRepository.findById(id).orElseThrow(
+                () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
+        );
+
+        // Upload the file into the multimedia storage service
+        String url = this.multimediaStorageService.upload(file, fileName);
+
+        // Save the image's uploaded URL
+        product.setImageUrl(url);
+        productRepository.save(product);
+
+        // Return the new URL for the product's image
+        return new UploadProductImageResponse(id, url);
     }
 }

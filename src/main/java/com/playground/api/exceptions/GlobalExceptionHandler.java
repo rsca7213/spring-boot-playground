@@ -1,8 +1,5 @@
 package com.playground.api.exceptions;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.utils.EnvironmentUtils;
 import com.playground.api.utils.ExceptionHandlingUtils;
@@ -68,7 +65,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getConstraintViolations().forEach(violation -> {
             String propertyPath = violation.getPropertyPath().toString();
@@ -89,7 +86,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         Throwable cause = ex.getCause();
         String message = ExceptionHandlingUtils.getHttpMessageNotReadableMessage(cause);
         Map<String, String> errors = ExceptionHandlingUtils.getHttpMessageNotReadableErrors(cause);

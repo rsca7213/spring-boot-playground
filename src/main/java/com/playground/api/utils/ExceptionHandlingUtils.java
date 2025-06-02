@@ -51,7 +51,7 @@ public class ExceptionHandlingUtils {
             fieldName = "Unknown";
             errorMessage = "Malformed JSON syntax at line " + jpe.getLocation().getLineNr() + ", column " + jpe.getLocation().getColumnNr();
         }
-        if (cause instanceof JsonMappingException jme) {
+        if (cause instanceof JsonMappingException) {
             fieldName = getFieldNameFromThrowableCause(cause);
             errorMessage = "Input does not match expected structure or type";
         }

@@ -1,10 +1,7 @@
 package com.playground.api.services;
 
 import com.playground.api.dtos.common.PaginationResponse;
-import com.playground.api.dtos.product.CreateProductBody;
-import com.playground.api.dtos.product.CreateProductResponse;
-import com.playground.api.dtos.product.ListProductsQuery;
-import com.playground.api.dtos.product.ListProductsResponse;
+import com.playground.api.dtos.product.*;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.Exception;
 import com.playground.api.models.Product;
@@ -20,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ProductService {
@@ -98,5 +96,23 @@ public class ProductService {
 
         // Create pagination response and return it
         return PaginationUtils.getPaginationResponse(page, response);
+    }
+
+    public FindProductResponse findProductById(UUID id) {
+        // Attempt to find a product with the given ID
+        Product product = productRepository.findById(id).orElseThrow(
+                () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
+        );
+
+        // Return the product information
+        return new FindProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getCategory(),
+                product.getStockQuantity(),
+                product.getImageUrl()
+        );
     }
 }

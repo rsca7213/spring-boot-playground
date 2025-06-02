@@ -12,7 +12,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -44,12 +43,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
 
-        ex.getBindingResult().getFieldErrors().forEach((fieldError) -> {
-            errors.put(fieldError.getField(), fieldError.getDefaultMessage());
-        });
-        ex.getBindingResult().getGlobalErrors().forEach((globalError) -> {
-            errors.put(globalError.getObjectName(), globalError.getDefaultMessage());
-        });
+        ex.getBindingResult().getFieldErrors().forEach((fieldError) -> errors.put(fieldError.getField(), fieldError.getDefaultMessage()));
+        ex.getBindingResult().getGlobalErrors().forEach((globalError) -> errors.put(globalError.getObjectName(), globalError.getDefaultMessage()));
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())

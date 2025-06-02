@@ -1,7 +1,6 @@
 package com.playground.api.dtos.product;
 
 import com.playground.api.enums.ProductCategory;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.*;
 import lombok.Value;
 import org.hibernate.validator.constraints.URL;
@@ -21,7 +20,6 @@ public class CreateProductBody {
     Integer stockQuantity;
 
     @NotNull
-    @Enumerated
     ProductCategory category;
 
     @NotNull

@@ -35,11 +35,11 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(productService.findProductById(requestParams.getId()));
     }
 
-    @PutMapping("/{id}/image")
-    public ResponseEntity<UploadProductImageResponse>  uploadProductImage(
+    @PutMapping("/{productId}/image")
+    public ResponseEntity<UploadProductImageResponse> uploadProductImage(
             @ModelAttribute UploadProductImageParams requestParams,
             @RequestParam("file") MultipartFile file
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.uploadProductImage(requestParams.getId(), file));
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.uploadProductImage(requestParams.getProductId(), file));
     }
 }

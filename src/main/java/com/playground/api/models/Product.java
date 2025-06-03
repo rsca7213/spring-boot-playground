@@ -6,7 +6,6 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.URL;
 
 import java.util.UUID;
 
@@ -40,6 +39,7 @@ public class Product {
     @DecimalMin(value = "0.01")
     private Double price;
 
-    @URL
-    private String imageUrl;
+    @ManyToOne
+    @JoinColumn
+    private Multimedia multimedia;
 }

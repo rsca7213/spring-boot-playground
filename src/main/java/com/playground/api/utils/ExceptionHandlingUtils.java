@@ -60,4 +60,12 @@ public class ExceptionHandlingUtils {
         errors.put(fieldName, errorMessage);
         return errors;
     }
+
+    public static String getStackTraceAsString(Throwable ex) {
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement element : ex.getStackTrace()) {
+            sb.append(element.toString()).append("\n");
+        }
+        return sb.toString();
+    }
 }

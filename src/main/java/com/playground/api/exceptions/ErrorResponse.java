@@ -19,4 +19,5 @@ public class ErrorResponse {
     private ErrorCode errorCode;
     private Map<String, String> errors;
     private String originalException;
+    private String stackTrace;
 }

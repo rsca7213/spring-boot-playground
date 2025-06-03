@@ -101,6 +101,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
         String exceptionClass = EnvironmentUtils.isDevelopment(environment) ? ex.getClass().getName() : null;
+        String stackTrace = EnvironmentUtils.isDevelopment(environment) ? ExceptionHandlingUtils.getStackTraceAsString(ex) : null;
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -109,6 +110,7 @@ public class GlobalExceptionHandler {
                 .message("An unexpected server error occurred. Please try again later")
                 .errorCode(ErrorCode.RUNTIME_ERROR)
                 .originalException(exceptionClass)
+                .stackTrace(stackTrace)
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

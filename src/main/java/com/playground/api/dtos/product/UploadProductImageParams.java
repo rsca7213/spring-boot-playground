@@ -6,5 +6,5 @@ import java.util.UUID;
 
 @Value
 public class UploadProductImageParams {
-    UUID id;
+    UUID productId;
 }

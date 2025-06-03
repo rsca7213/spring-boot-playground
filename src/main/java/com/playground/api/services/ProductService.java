@@ -5,10 +5,12 @@ import com.playground.api.dtos.product.*;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.Exception;
 import com.playground.api.integrations.ports.MultimediaStorageService;
+import com.playground.api.models.Multimedia;
 import com.playground.api.models.Product;
+import com.playground.api.repositories.MultimediaRepository;
 import com.playground.api.repositories.ProductRepository;
 import com.playground.api.repositories.specifications.ProductSpecifications;
-import com.playground.api.utils.FileUtils;
+import com.playground.api.utils.MultimediaUtils;
 import com.playground.api.utils.PaginationUtils;
 import com.playground.api.utils.SpecificationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,15 +28,21 @@ import java.util.UUID;
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final MultimediaRepository multimediaRepository;
     private final MultimediaStorageService multimediaStorageService;
+    private final MultimediaUtils multimediaUtils;
 
     @Autowired
     public ProductService(
             final ProductRepository productRepository,
-            final MultimediaStorageService multimediaStorageService
+            final MultimediaRepository multimediaRepository,
+            final MultimediaStorageService multimediaStorageService,
+            final MultimediaUtils multimediaUtils
     ) {
         this.productRepository = productRepository;
+        this.multimediaRepository = multimediaRepository;
         this.multimediaStorageService = multimediaStorageService;
+        this.multimediaUtils = multimediaUtils;
     }
 
     public CreateProductResponse createProduct(CreateProductBody request) {
@@ -53,7 +61,6 @@ public class ProductService {
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getStockQuantity());
         product.setCategory(request.getCategory());
-        product.setImageUrl(request.getImageUrl());
 
         // Save the product to the database
         product = productRepository.save(product);
@@ -66,7 +73,7 @@ public class ProductService {
                 product.getPrice(),
                 product.getCategory(),
                 product.getStockQuantity(),
-                product.getImageUrl()
+                product.getMultimedia() != null ? multimediaStorageService.generatePublicUrl(product.getMultimedia().getUri()) : null
         );
     }
 
@@ -98,8 +105,7 @@ public class ProductService {
                         product.getDescription(),
                         product.getPrice(),
                         product.getCategory(),
-                        product.getStockQuantity(),
-                        product.getImageUrl()
+                        product.getStockQuantity()
                 )
         ).toList();
 
@@ -121,11 +127,11 @@ public class ProductService {
                 product.getPrice(),
                 product.getCategory(),
                 product.getStockQuantity(),
-                product.getImageUrl()
+                product.getMultimedia() != null ? multimediaStorageService.generatePublicUrl(product.getMultimedia().getUri()) : null
         );
     }
 
-    public UploadProductImageResponse uploadProductImage(UUID id, MultipartFile file) {
+    public UploadProductImageResponse uploadProductImage(UUID productId, MultipartFile file) {
         // Define allowed product image types
         final List<String> ALLOWED_IMAGE_MIME_TYPES = Arrays.asList(
                 "image/jpeg",
@@ -139,24 +145,34 @@ public class ProductService {
         }
 
         // Validate the file and extract the extension
-        String fileExtension = FileUtils.validateAndExtractFileExtension(file, ALLOWED_IMAGE_MIME_TYPES);
+        String fileExtension = multimediaUtils.validateAndExtractFileExtension(file, ALLOWED_IMAGE_MIME_TYPES);
 
         // Generate the filename (product's ID with extension)
-        String fileName = String.format("products/%s.%s", id, fileExtension);
+        String fileName = String.format("products/%s.%s", productId, fileExtension);
 
         // Verify that the product by given ID exists
-        Product product = productRepository.findById(id).orElseThrow(
+        Product product = productRepository.findById(productId).orElseThrow(
                 () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
         );
 
         // Upload the file into the multimedia storage service
-        String url = this.multimediaStorageService.upload(file, fileName);
+        String uri = multimediaStorageService.upload(file, fileName);
 
-        // Save the image's uploaded URL
-        product.setImageUrl(url);
+        // Create a multimedia object with the uploaded file's URI
+        Multimedia multimedia = new Multimedia();
+        multimedia.setUri(uri);
+        multimedia.setMimeType(file.getContentType());
+        multimedia.setFileName(fileName);
+        multimediaRepository.save(multimedia);
+
+        // Associate the multimedia object with the product
+        product.setMultimedia(multimedia);
         productRepository.save(product);
 
         // Return the new URL for the product's image
-        return new UploadProductImageResponse(id, url);
+        return new UploadProductImageResponse(
+                productId,
+                multimediaStorageService.generatePublicUrl(multimedia.getUri())
+        );
     }
 }

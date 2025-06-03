@@ -13,5 +13,4 @@ public class ListProductsResponse {
     Double price;
     ProductCategory category;
     Integer stockQuantity;
-    String imageUrl;
 }

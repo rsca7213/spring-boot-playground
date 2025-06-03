@@ -26,7 +26,4 @@ public class CreateProductBody {
     @Positive
     @DecimalMin(value = "0.01")
     Double price;
-
-    @URL
-    String imageUrl;
 }

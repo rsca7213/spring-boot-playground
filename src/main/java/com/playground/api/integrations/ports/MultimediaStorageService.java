@@ -6,4 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public interface MultimediaStorageService {
     String upload(MultipartFile file, String fileName);
+
+    String generatePublicUrl(String uri);
 }

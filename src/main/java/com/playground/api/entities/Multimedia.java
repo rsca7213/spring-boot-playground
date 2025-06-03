@@ -30,6 +30,6 @@ public class Multimedia {
     @NotBlank
     private String fileName;
 
-    @OneToMany
+    @OneToMany(mappedBy = "multimedia")
     private Set<Product> products;
 }

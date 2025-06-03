@@ -26,7 +26,6 @@ public class Role {
     @Size(min = 3, max = 100)
     private String name;
 
-    @OneToMany
-    @JoinColumn
+    @OneToMany(mappedBy = "role")
     private Set<User> users;
 }

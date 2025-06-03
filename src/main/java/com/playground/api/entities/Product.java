@@ -43,6 +43,6 @@ public class Product {
     private Double price;
 
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(name = "multimedia_id")
     private Multimedia multimedia;
 }

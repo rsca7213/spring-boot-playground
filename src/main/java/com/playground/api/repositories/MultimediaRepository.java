@@ -1,6 +1,6 @@
 package com.playground.api.repositories;
 
-import com.playground.api.models.Multimedia;
+import com.playground.api.entities.Multimedia;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,7 +1,7 @@
 package com.playground.api.repositories.specifications;
 
 import com.playground.api.enums.ProductCategory;
-import com.playground.api.models.Product;
+import com.playground.api.entities.Product;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ProductSpecifications {

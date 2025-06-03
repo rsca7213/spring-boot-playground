@@ -1,4 +1,4 @@
-package com.playground.api.models;
+package com.playground.api.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;

@@ -1,6 +1,6 @@
 package com.playground.api.repositories;
 
-import com.playground.api.models.Product;
+import com.playground.api.entities.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

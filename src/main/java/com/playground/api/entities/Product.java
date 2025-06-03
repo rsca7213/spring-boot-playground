@@ -1,4 +1,4 @@
-package com.playground.api.models;
+package com.playground.api.entities;
 
 import com.playground.api.enums.ProductCategory;
 import jakarta.persistence.*;

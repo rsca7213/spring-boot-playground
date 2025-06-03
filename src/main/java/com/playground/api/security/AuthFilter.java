@@ -4,7 +4,6 @@ import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.Exception;
 import com.playground.api.models.AuthUser;
 import com.playground.api.repositories.UserRepository;
-import com.playground.api.services.AuthService;
 import com.playground.api.utils.AuthUserJwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

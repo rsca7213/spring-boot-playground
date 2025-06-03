@@ -2,7 +2,6 @@ package com.playground.api.models;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
 
 import java.util.Map;
 import java.util.UUID;

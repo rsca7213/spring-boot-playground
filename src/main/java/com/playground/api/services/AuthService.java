@@ -5,9 +5,7 @@ import com.playground.api.dtos.auth.RegisterUserResponse;
 import com.playground.api.entities.User;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.Exception;
-import com.playground.api.models.AuthUser;
 import com.playground.api.repositories.UserRepository;
-import com.playground.api.utils.AuthUserJwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,7 +19,6 @@ public class AuthService {
     @Autowired
     public AuthService(
             UserRepository userRepository,
-            AuthUserJwtUtils authUserJwtUtils,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;

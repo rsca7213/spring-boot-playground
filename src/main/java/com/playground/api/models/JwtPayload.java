@@ -1,6 +1,5 @@
 package com.playground.api.models;
 
-import io.jsonwebtoken.Claims;
 import lombok.Data;
 
 import java.util.Map;

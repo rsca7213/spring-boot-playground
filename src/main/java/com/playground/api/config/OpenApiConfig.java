@@ -15,8 +15,8 @@ public class OpenApiConfig {
                 .description("This is a simple Spring Boot REST API developed for learning purposes.")
                 .version("1.0.0")
                 .contact(new Contact()
-                        .name("Ricardo")
-                        .url("https://github.com/rsca7213")
+                        .name("GitHub Repository")
+                        .url("https://github.com/rsca7213/spring-boot-playground")
                 )
         );
     }

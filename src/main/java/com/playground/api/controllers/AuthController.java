@@ -1,5 +1,7 @@
 package com.playground.api.controllers;
 
+import com.playground.api.dtos.auth.LoginUserBody;
+import com.playground.api.dtos.auth.LoginUserResponse;
 import com.playground.api.dtos.auth.RegisterUserBody;
 import com.playground.api.dtos.auth.RegisterUserResponse;
 import com.playground.api.services.AuthService;
@@ -32,5 +34,14 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<RegisterUserResponse> registerUser(@Valid @RequestBody RegisterUserBody requestBody) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(requestBody));
+    }
+
+    @Operation(
+            summary = "Login a user",
+            description = "Logs in a user with the provided credentials. Returns a JWT token for authentication."
+    )
+    @PostMapping("/login")
+    public ResponseEntity<LoginUserResponse> loginUser(@Valid @RequestBody LoginUserBody requestBody) {
+        return ResponseEntity.ok(authService.loginUser(requestBody));
     }
 }

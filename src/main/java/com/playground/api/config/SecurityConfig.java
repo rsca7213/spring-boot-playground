@@ -1,6 +1,6 @@
 package com.playground.api.config;
 
-import com.playground.api.security.AuthFilter;
+import com.playground.api.filters.AuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +44,7 @@ public class SecurityConfig {
                                 // Allow access to basic health check endpoint
                                 .requestMatchers("/actuator/health").permitAll()
                                 // Allow access to Swagger UI and OpenAPI documentation
-                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/docs/**").permitAll()
                                 // Require authentication for all other requests
                                 .anyRequest().authenticated()
                 );

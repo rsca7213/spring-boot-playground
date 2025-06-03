@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-
 public abstract class JwtUtils<T extends JwtPayload> {
     @Value("${jwt.secret}")
     protected String jwtSecret;
@@ -46,7 +45,7 @@ public abstract class JwtUtils<T extends JwtPayload> {
     public T validateAndExtractToken(String token) {
         try {
              Jwt<?, ?> jwt = Jwts.parser()
-                    .decryptWith(jwtKey)
+                    .verifyWith(jwtKey)
                     .build()
                     .parse(token);
 

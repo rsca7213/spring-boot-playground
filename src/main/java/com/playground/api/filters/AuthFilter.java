@@ -1,4 +1,4 @@
-package com.playground.api.security;
+package com.playground.api.filters;
 
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.Exception;
@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -56,5 +58,18 @@ public class AuthFilter extends OncePerRequestFilter {
 
         // Set the authenticated user in the request context
         request.setAttribute("authUser", authUser);
+
+        // Create an Authentication object
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                authUser,
+                null,
+                authUser.getAuthorities()
+        );
+
+        // Set the authentication in the security context holder
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+        // Continue the filter chain
+        filterChain.doFilter(request, response);
     }
 }

@@ -1,0 +1,41 @@
+package com.playground.api.dtos.auth;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.*;
+import lombok.Value;
+
+@Value
+@Schema(description = "Request body for registering a new user")
+public class RegisterUserBody {
+    @Schema(
+            description = "The email address of the user",
+            example = "johndoe@email.com"
+    )
+    @NotBlank
+    @Email
+    String email;
+
+    @Schema(
+            description = "The password for the user account",
+            example = "Password123*"
+    )
+    @NotBlank
+    @Size(min = 10)
+    String password;
+
+    @Schema(
+            description = "The first name of the user",
+            example = "John"
+    )
+    @NotBlank
+    @Size(min = 3, max = 50)
+    String firstName;
+
+    @Schema(
+            description = "The last name of the user",
+            example = "Doe"
+    )
+    @NotBlank
+    @Size(min = 3, max = 50)
+    String lastName;
+}

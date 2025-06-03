@@ -13,6 +13,9 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "products", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "name")
+})
 public class Product {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)

@@ -2,6 +2,7 @@ package com.playground.api.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,23 +14,19 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "multimedia", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "uri")
+@Table(name = "roles", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "name")
 })
-public class Multimedia {
+public class Role {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
     private UUID id;
 
     @NotBlank
-    private String uri;
-
-    @NotBlank
-    private String mimeType;
-
-    @NotBlank
-    private String fileName;
+    @Size(min = 3, max = 100)
+    private String name;
 
     @OneToMany
-    private Set<Product> products;
+    @JoinColumn
+    private Set<User> users;
 }

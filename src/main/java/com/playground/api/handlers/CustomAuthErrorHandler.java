@@ -3,7 +3,6 @@ package com.playground.api.handlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.ErrorResponse;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -22,7 +21,7 @@ public class CustomAuthErrorHandler implements AuthenticationEntryPoint {
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException authException
-    ) throws IOException, ServletException {
+    ) throws IOException {
         response.setContentType("application/json");
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
 

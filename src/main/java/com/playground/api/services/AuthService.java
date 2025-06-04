@@ -52,7 +52,9 @@ public class AuthService {
         user = userRepository.save(user);
 
         // Return the response with the newly created user's ID
-        return new RegisterUserResponse(user.getId());
+        return RegisterUserResponse.builder()
+                .id(user.getId())
+                .build();
     }
 
     public LoginUserResponse loginUser(LoginUserBody loginUserBody) {
@@ -74,9 +76,9 @@ public class AuthService {
         String token = authUserJwtUtils.generateToken(authUser);
 
         // Return the response with the token and user details
-        return new LoginUserResponse(
-                token
-        );
+        return LoginUserResponse.builder()
+                .token(token)
+                .build();
 
     }
 }

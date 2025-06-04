@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -66,15 +65,19 @@ public class ProductService {
         product = productRepository.save(product);
 
         // Return the created product
-        return new CreateProductResponse(
-                product.getId(),
-                product.getName(),
-                product.getDescription(),
-                product.getPrice(),
-                product.getCategory(),
-                product.getStockQuantity(),
-                product.getMultimedia() != null ? multimediaStorageService.generatePublicUrl(product.getMultimedia().getUri()) : null
-        );
+        return CreateProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .category(product.getCategory())
+                .stockQuantity(product.getStockQuantity())
+                .imageUrl(
+                        product.getMultimedia() != null
+                                ? multimediaStorageService.generatePublicUrl(product.getMultimedia().getUri())
+                                : null
+                )
+                .build();
     }
 
     public PaginationResponse<ListProductsResponse> listProducts(
@@ -99,14 +102,14 @@ public class ProductService {
 
         // Map the products to the response DTO
         List<ListProductsResponse> response = page.getContent().stream().map(
-                product -> new ListProductsResponse(
-                        product.getId(),
-                        product.getName(),
-                        product.getDescription(),
-                        product.getPrice(),
-                        product.getCategory(),
-                        product.getStockQuantity()
-                )
+                product -> ListProductsResponse.builder()
+                        .id(product.getId())
+                        .name(product.getName())
+                        .description(product.getDescription())
+                        .price(product.getPrice())
+                        .category(product.getCategory())
+                        .stockQuantity(product.getStockQuantity())
+                        .build()
         ).toList();
 
         // Create pagination response and return it
@@ -120,32 +123,29 @@ public class ProductService {
         );
 
         // Return the product information
-        return new FindProductResponse(
-                product.getId(),
-                product.getName(),
-                product.getDescription(),
-                product.getPrice(),
-                product.getCategory(),
-                product.getStockQuantity(),
-                product.getMultimedia() != null ? multimediaStorageService.generatePublicUrl(product.getMultimedia().getUri()) : null
-        );
+        return FindProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .category(product.getCategory())
+                .stockQuantity(product.getStockQuantity())
+                .imageUrl(
+                        product.getMultimedia() != null
+                                ? multimediaStorageService.generatePublicUrl(product.getMultimedia().getUri())
+                                : null
+                )
+                .build();
     }
 
     public UploadProductImageResponse uploadProductImage(UUID productId, MultipartFile file) {
-        // Define allowed product image types
-        final List<String> ALLOWED_IMAGE_MIME_TYPES = Arrays.asList(
-                "image/jpeg",
-                "image/png",
-                "image/webp"
-        );
-
         // Verify that the file is not empty
         if (file.isEmpty()) {
             throw new Exception("The uploaded file is empty", ErrorCode.FILE_CONTENT_ERROR, HttpStatus.BAD_REQUEST);
         }
 
         // Validate the file and extract the extension
-        String fileExtension = multimediaUtils.validateAndExtractFileExtension(file, ALLOWED_IMAGE_MIME_TYPES);
+        String fileExtension = multimediaUtils.validateAndExtractFileExtension(file);
 
         // Generate the filename (product's ID with extension)
         String fileName = String.format("products/%s.%s", productId, fileExtension);
@@ -170,9 +170,9 @@ public class ProductService {
         productRepository.save(product);
 
         // Return the new URL for the product's image
-        return new UploadProductImageResponse(
-                productId,
-                multimediaStorageService.generatePublicUrl(multimedia.getUri())
-        );
+        return UploadProductImageResponse.builder()
+                .url(multimediaStorageService.generatePublicUrl(uri))
+                .productId(product.getId())
+                .build();
     }
 }

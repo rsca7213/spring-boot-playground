@@ -1,11 +1,13 @@
 package com.playground.api.dtos.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 import lombok.Value;
 
 import java.util.UUID;
 
 @Value
+@Builder
 @Schema(description = "Response object for user registration")
 public class RegisterUserResponse {
     @Schema(

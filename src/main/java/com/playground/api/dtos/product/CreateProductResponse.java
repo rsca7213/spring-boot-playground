@@ -2,11 +2,13 @@ package com.playground.api.dtos.product;
 
 import com.playground.api.enums.ProductCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 import lombok.Value;
 
 import java.util.UUID;
 
 @Value
+@Builder
 @Schema(description = "Response object for creating a product")
 public class CreateProductResponse {
     @Schema(

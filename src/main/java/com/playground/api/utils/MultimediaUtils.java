@@ -1,18 +1,17 @@
 package com.playground.api.utils;
 
+import com.playground.api.enums.AllowedFileMimeTypes;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.Exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @Service
 public class MultimediaUtils {
-    public String validateAndExtractFileExtension(MultipartFile file, List<String> allowedTypes) {
+    public String validateAndExtractFileExtension(MultipartFile file) {
         String contentType = file.getContentType();
-        if (contentType == null || !allowedTypes.contains(contentType)) {
+        if (contentType == null || !AllowedFileMimeTypes.isValidMimeType(contentType)) {
             throw new com.playground.api.exceptions.Exception("The uploaded file is not of a valid type (JPG, PNG or WEBP)", ErrorCode.FILE_CONTENT_ERROR, HttpStatus.BAD_REQUEST);
         }
 

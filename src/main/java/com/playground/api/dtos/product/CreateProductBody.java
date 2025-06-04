@@ -3,9 +3,11 @@ package com.playground.api.dtos.product;
 import com.playground.api.enums.ProductCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Value;
 
 @Value
+@Builder
 @Schema(description = "Request body for creating a new product")
 public class CreateProductBody {
     @Schema(

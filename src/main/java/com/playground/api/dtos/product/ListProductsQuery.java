@@ -7,11 +7,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
+@Builder
 @Schema(description = "Query parameters for listing and paginating products")
 public class ListProductsQuery extends PaginationQuery {
     @Min(value = 1)

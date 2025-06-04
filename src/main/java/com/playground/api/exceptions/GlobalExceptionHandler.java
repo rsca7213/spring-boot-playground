@@ -100,7 +100,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+    public ResponseEntity<ErrorResponse> handleAuthorizationDeniedException() {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.FORBIDDEN.value())
                 .statusText(HttpStatus.FORBIDDEN.getReasonPhrase())

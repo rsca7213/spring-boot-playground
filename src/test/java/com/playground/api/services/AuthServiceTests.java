@@ -112,9 +112,7 @@ public class AuthServiceTests {
         Mockito.when(userRepository.existsByEmailIgnoreCase(registerUserBody.getEmail())).thenReturn(true);
 
         // Call the registerUser method and expect an exception to be thrown
-        Exception exception = Assertions.assertThrows(Exception.class, () -> {
-            authService.registerUser(registerUserBody);
-        });
+        Exception exception = Assertions.assertThrows(Exception.class, () -> authService.registerUser(registerUserBody));
 
         // Verify that the user repository was called to check for existing email
         Mockito.verify(userRepository).existsByEmailIgnoreCase(registerUserBody.getEmail());
@@ -163,9 +161,7 @@ public class AuthServiceTests {
         Mockito.when(userRepository.findByEmailIgnoreCase(loginUserBody.getEmail())).thenReturn(null);
 
         // Call the loginUser method and expect an exception to be thrown
-        Exception exception = Assertions.assertThrows(Exception.class, () -> {
-            authService.loginUser(loginUserBody);
-        });
+        Exception exception = Assertions.assertThrows(Exception.class, () -> authService.loginUser(loginUserBody));
 
         // Verify that the user repository was called with the correct email
         Mockito.verify(userRepository).findByEmailIgnoreCase(loginUserBody.getEmail());
@@ -187,9 +183,7 @@ public class AuthServiceTests {
         Mockito.when(passwordEncoder.matches(loginUserBody.getPassword(), hashedPassword)).thenReturn(false);
 
         // Call the loginUser method and expect an exception to be thrown
-        Exception exception = Assertions.assertThrows(Exception.class, () -> {
-            authService.loginUser(loginUserBody);
-        });
+        Exception exception = Assertions.assertThrows(Exception.class, () -> authService.loginUser(loginUserBody));
 
         // Verify that the user repository was called with the correct email
         Mockito.verify(userRepository).findByEmailIgnoreCase(loginUserBody.getEmail());

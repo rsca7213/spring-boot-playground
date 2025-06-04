@@ -24,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,9 +37,6 @@ public class ProductServiceTests {
 
     @Mock
     private MultimediaUtils multimediaUtils;
-
-    @Mock
-    private MultimediaRepository multimediaRepository;
 
     @InjectMocks
     private ProductService productService;
@@ -61,11 +57,10 @@ public class ProductServiceTests {
     // Values used in the tests
     private final UUID uuid = UUID.randomUUID();
     private final String imageUrl = "https://example.com/image.jpg";
-    private final String imageName = "image.jpg";
     private final String imageUri = "products/" + uuid + ".jpeg";
 
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() {
         // Set up entities
         product = new Product();
         product.setId(uuid);

@@ -29,7 +29,7 @@ public class CustomAuthErrorHandler implements AuthenticationEntryPoint {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .statusText(HttpStatus.UNAUTHORIZED.getReasonPhrase())
-                .message("Authentication is required to access this resource")
+                .message(authException.getMessage())
                 .errorCode(ErrorCode.INVALID_AUTHENTICATION)
                 .build();
 

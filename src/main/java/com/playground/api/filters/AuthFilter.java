@@ -1,6 +1,8 @@
 package com.playground.api.filters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playground.api.enums.ErrorCode;
+import com.playground.api.exceptions.ErrorResponse;
 import com.playground.api.exceptions.Exception;
 import com.playground.api.models.AuthUser;
 import com.playground.api.repositories.UserRepository;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 @Component
 public class AuthFilter extends OncePerRequestFilter {
@@ -31,11 +34,7 @@ public class AuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         // Extract the JWT auth token from the request header
         String authToken = request.getHeader("Authorization");
 
@@ -48,26 +47,39 @@ public class AuthFilter extends OncePerRequestFilter {
         // Remove the "Bearer " prefix from the token
         String token = authToken.substring(7);
 
-        // Extract the authenticated user from the JWT token
-        AuthUser authUser = authUserJwtUtils.validateAndExtractToken(token);
+        try {
+            // Extract the authenticated user from the JWT token
+            AuthUser authUser = authUserJwtUtils.validateAndExtractToken(token);
 
-        // Verify that said user by ID exists in the database
-        if (!userRepository.existsById(authUser.getId())) {
-            throw new Exception("Authenticated user does not exist", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+            // Verify that said user by ID exists in the database
+            if (!userRepository.existsById(authUser.getId())) {
+                throw new Exception("Authenticated user does not exist", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+            }
+
+            // Set the authenticated user in the request context
+            request.setAttribute("authUser", authUser);
+
+            // Create an Authentication object
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(authUser, null, authUser.getAuthorities());
+
+            // Set the authentication in the security context holder
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        } catch (Exception e) {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            ErrorResponse errorResponse = ErrorResponse.builder()
+                    .status(HttpStatus.UNAUTHORIZED.value())
+                    .statusText(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                    .message(e.getMessage())
+                    .errorCode(ErrorCode.INVALID_AUTHENTICATION)
+                    .build();
+            response.setContentType("application/json");
+            OutputStream out = response.getOutputStream();
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(out, errorResponse);
+            out.flush();
+            return;
         }
 
-        // Set the authenticated user in the request context
-        request.setAttribute("authUser", authUser);
-
-        // Create an Authentication object
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                authUser,
-                null,
-                authUser.getAuthorities()
-        );
-
-        // Set the authentication in the security context holder
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         // Continue the filter chain
         filterChain.doFilter(request, response);

@@ -15,6 +15,7 @@ public class AuthUser extends JwtPayload implements UserDetails {
     String email;
     String firstName;
     String lastName;
+    String roleName;
 
     public static AuthUser fromUser(User user) {
         AuthUser authUser = new AuthUser();
@@ -22,6 +23,8 @@ public class AuthUser extends JwtPayload implements UserDetails {
         authUser.setEmail(user.getEmail());
         authUser.setFirstName(user.getFirstName());
         authUser.setLastName(user.getLastName());
+        authUser.setRoleName(user.getRole().getName());
+
         return authUser;
     }
 
@@ -32,7 +35,8 @@ public class AuthUser extends JwtPayload implements UserDetails {
                 "id", id.toString(),
                 "email", email,
                 "firstName", firstName,
-                "lastName", lastName
+                "lastName", lastName,
+                "roleName", roleName
         );
     }
 
@@ -42,11 +46,12 @@ public class AuthUser extends JwtPayload implements UserDetails {
         this.email = (String) map.get("email");
         this.firstName = (String) map.get("firstName");
         this.lastName = (String) map.get("lastName");
+        this.roleName = (String) map.get("roleName");
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        return Collections.singleton(() -> String.format("ROLE_%s", this.roleName));
     }
 
     @Override

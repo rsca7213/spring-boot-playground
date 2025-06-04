@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,7 @@ public class ProductController {
             description = "Creates a new product with the provided details. Returns the created product."
     )
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CreateProductResponse> createProduct(@Valid @RequestBody CreateProductBody requestBody) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(requestBody));
     }
@@ -40,6 +42,7 @@ public class ProductController {
             description = "Lists products with pagination support. Returns a paginated response containing the products."
     )
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
     public ResponseEntity<PaginationResponse<ListProductsResponse>> listProducts(@ModelAttribute ListProductsQuery requestQuery) {
         return ResponseEntity.status(HttpStatus.OK).body(productService.listProducts(requestQuery));
     }
@@ -49,6 +52,7 @@ public class ProductController {
             description = "Retrieves a product by its ID. Returns the product details."
     )
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
     public ResponseEntity<FindProductResponse> findProductById(
             @Parameter(
                     description = "The unique identifier of the product to retrieve",
@@ -64,6 +68,7 @@ public class ProductController {
             description = "Updates an existing product's image. The product ID is provided in the request parameters, and the image file is uploaded as a multipart file. Returns the updated product image details."
     )
     @PutMapping(value = "/{productId}/image", consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UploadProductImageResponse> uploadProductImage(
             @RequestPart("file") MultipartFile file,
             @Parameter(

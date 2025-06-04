@@ -6,6 +6,7 @@ import com.playground.api.dtos.auth.RegisterUserBody;
 import com.playground.api.dtos.auth.RegisterUserResponse;
 import com.playground.api.entities.Role;
 import com.playground.api.entities.User;
+import com.playground.api.repositories.RoleRepository;
 import com.playground.api.repositories.UserRepository;
 import com.playground.api.utils.AuthUserJwtUtils;
 import org.junit.jupiter.api.Assertions;
@@ -18,12 +19,16 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTests {
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private RoleRepository roleRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -42,6 +47,9 @@ public class AuthServiceTests {
     private RegisterUserResponse registerUserResponse;
     private LoginUserResponse loginUserResponse;
 
+    // Entities
+    private Role role;
+
     // Values used in the tests
     private final String hashedPassword = "hashedPassword123";
     private final UUID uuid = UUID.randomUUID();
@@ -49,12 +57,17 @@ public class AuthServiceTests {
 
     @BeforeEach
     void setUp() {
+        // Set up a mock role
+        role = new Role();
+        role.setId(UUID.randomUUID());
+
         // Set up request DTOs
         registerUserBody = RegisterUserBody.builder()
                 .email("test@springbootplayground.com")
                 .firstName("John")
                 .lastName("Doe")
                 .password("Password123*")
+                .roleId(role.getId())
                 .build();
 
         loginUserBody = LoginUserBody.builder()
@@ -75,6 +88,9 @@ public class AuthServiceTests {
 
     @Test
     void registerUser_Success() {
+        // Mock the role repository to return a role with the specified ID
+        Mockito.when(roleRepository.findById(registerUserBody.getRoleId())).thenReturn(Optional.ofNullable(role));
+
         // Mock the response from the user repository to verify that the user does not already exist
         Mockito.when(userRepository.existsByEmailIgnoreCase(registerUserBody.getEmail())).thenReturn(false);
 
@@ -88,6 +104,7 @@ public class AuthServiceTests {
         user.setFirstName(registerUserBody.getFirstName());
         user.setLastName(registerUserBody.getLastName());
         user.setPasswordHash(hashedPassword);
+        user.setRole(role);
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 
         // Call the registerUser method
@@ -108,6 +125,9 @@ public class AuthServiceTests {
 
     @Test
     void registerUser_EmailAlreadyExists() {
+        // Mock the role repository to return a role with the specified ID
+        Mockito.when(roleRepository.findById(registerUserBody.getRoleId())).thenReturn(Optional.ofNullable(role));
+
         // Mock the user repository to indicate that a user with the provided email already exists
         Mockito.when(userRepository.existsByEmailIgnoreCase(registerUserBody.getEmail())).thenReturn(true);
 

@@ -5,7 +5,6 @@ import com.playground.api.dtos.product.*;
 import com.playground.api.entities.Product;
 import com.playground.api.enums.ProductCategory;
 import com.playground.api.integrations.ports.MultimediaStorageService;
-import com.playground.api.repositories.MultimediaRepository;
 import com.playground.api.repositories.ProductRepository;
 import com.playground.api.utils.MultimediaUtils;
 import org.junit.jupiter.api.Assertions;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;

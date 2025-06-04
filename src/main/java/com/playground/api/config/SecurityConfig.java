@@ -54,7 +54,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth
                                 // Allow access to the authentication endpoints
-                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/auth/login").permitAll()
                                 // Allow access to basic health check endpoint
                                 .requestMatchers("/actuator/health").permitAll()
                                 // Allow access to Swagger UI and OpenAPI documentation

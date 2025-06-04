@@ -2,7 +2,7 @@ package com.playground.api.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playground.api.enums.ErrorCode;
-import com.playground.api.exceptions.Exception;
+import com.playground.api.exceptions.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -22,19 +22,20 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             AccessDeniedException accessDeniedException
     ) throws IOException {
         response.setContentType("application/json");
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setStatus(HttpStatus.FORBIDDEN.value());
 
-        // Generate an Exception response
-        Exception exception = new Exception(
-                "You are not authorized to access this resource",
-                ErrorCode.INVALID_AUTHORIZATION,
-                HttpStatus.FORBIDDEN
-        );
+        // Generate an ErrorResponse
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .statusText(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .message("Access is denied to this resource")
+                .errorCode(ErrorCode.INVALID_AUTHENTICATION)
+                .build();
 
         // Generate the Output Response
         OutputStream out = response.getOutputStream();
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(out, exception);
+        mapper.writeValue(out, errorResponse);
         out.flush();
     }
 }

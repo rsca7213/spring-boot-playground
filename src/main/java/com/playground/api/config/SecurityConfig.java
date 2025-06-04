@@ -1,6 +1,8 @@
 package com.playground.api.config;
 
 import com.playground.api.filters.AuthFilter;
+import com.playground.api.handlers.CustomAccessDeniedHandler;
+import com.playground.api.handlers.CustomAuthErrorHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,10 +21,18 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
     private final AuthFilter authFilter;
+    private final CustomAuthErrorHandler customAuthErrorHandler;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Autowired
-    public SecurityConfig(AuthFilter authFilter) {
+    public SecurityConfig(
+            AuthFilter authFilter,
+            CustomAuthErrorHandler customAuthErrorHandler,
+            CustomAccessDeniedHandler customAccessDeniedHandler
+    ) {
         this.authFilter = authFilter;
+        this.customAuthErrorHandler = customAuthErrorHandler;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
     }
 
     @Bean
@@ -36,6 +46,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(
                         (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .exceptionHandling((exceptionHandling) -> exceptionHandling
+                        .authenticationEntryPoint(customAuthErrorHandler)
+                        .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(
                         auth -> auth

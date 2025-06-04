@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -19,30 +20,45 @@ import java.util.UUID;
 public class Product {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
+    @Column(name = "id", unique = true, nullable = false)
     private UUID id;
 
     @NotBlank
     @Size(min = 3, max = 100)
+    @Column(name = "name", unique = true, nullable = false)
     private String name;
 
     @NotBlank
     @Size(min = 10, max = 500)
+    @Column(name = "description", nullable = false)
     private String description;
 
     @NotNull
     @PositiveOrZero
+    @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false)
     private ProductCategory category;
 
     @NotNull
     @Positive
     @DecimalMin(value = "0.01")
+    @Column(name = "price", nullable = false)
     private Double price;
 
     @ManyToOne
-    @JoinColumn(name = "multimedia_id")
+    @JoinColumn(name = "multimedia_id", nullable = false)
     private Multimedia multimedia;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 }

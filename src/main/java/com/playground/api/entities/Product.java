@@ -6,6 +6,8 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -39,7 +41,7 @@ public class Product {
     private Integer stockQuantity;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "category", nullable = false)
     private ProductCategory category;
 
@@ -50,7 +52,7 @@ public class Product {
     private Double price;
 
     @ManyToOne
-    @JoinColumn(name = "multimedia_id", nullable = false)
+    @JoinColumn(name = "multimedia_id")
     private Multimedia multimedia;
 
     @Column(name = "created_at", nullable = false)
@@ -61,4 +63,16 @@ public class Product {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+
+    @PrePersist
+    private void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

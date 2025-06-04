@@ -5,6 +5,8 @@ import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.UUID;
+
 @Value
 @Builder
 @Schema(description = "Request body for registering a new user")
@@ -40,4 +42,11 @@ public class RegisterUserBody {
     @NotBlank
     @Size(min = 3, max = 50)
     String lastName;
+
+    @Schema(
+            description = "The id of the role assigned to the user",
+            example = "123e4567-e89b-12d3-a456-426614174000"
+    )
+    @NotNull
+    UUID roleId;
 }

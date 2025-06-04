@@ -4,10 +4,12 @@ import com.playground.api.dtos.auth.LoginUserBody;
 import com.playground.api.dtos.auth.LoginUserResponse;
 import com.playground.api.dtos.auth.RegisterUserBody;
 import com.playground.api.dtos.auth.RegisterUserResponse;
+import com.playground.api.entities.Role;
 import com.playground.api.entities.User;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.Exception;
 import com.playground.api.models.AuthUser;
+import com.playground.api.repositories.RoleRepository;
 import com.playground.api.repositories.UserRepository;
 import com.playground.api.utils.AuthUserJwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,21 +20,28 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthUserJwtUtils authUserJwtUtils;
 
     @Autowired
     public AuthService(
             UserRepository userRepository,
+            RoleRepository roleRepository,
             PasswordEncoder passwordEncoder,
             AuthUserJwtUtils authUserJwtUtils
     ) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.authUserJwtUtils = authUserJwtUtils;
     }
 
     public RegisterUserResponse registerUser(RegisterUserBody registerUserBody) {
+        // Validate that the role exists
+        Role role = roleRepository.findById(registerUserBody.getRoleId())
+                .orElseThrow(() -> new Exception("Role does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.BAD_REQUEST));
+
         // Check if the user already exists with the provided email
         if (userRepository.existsByEmailIgnoreCase(registerUserBody.getEmail())) {
             throw new Exception("User with this email already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
@@ -47,6 +56,7 @@ public class AuthService {
         user.setFirstName(registerUserBody.getFirstName());
         user.setLastName(registerUserBody.getLastName());
         user.setPasswordHash(hashedPassword);
+        user.setRole(role);
 
         // Save the user to the database
         user = userRepository.save(user);

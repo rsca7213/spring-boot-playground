@@ -40,6 +40,18 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 }
 
-tasks.named('test') {
+tasks.named('test', Test) {
 	useJUnitPlatform()
+
+	jvmArgs "-Dspring.profiles.active=test"
+
+	// Configuration to load Mockito's Byte Buddy agent
+	def byteBuddyAgent = configurations.testRuntimeClasspath.find { it.name.contains("byte-buddy-agent") }
+
+	if (byteBuddyAgent != null) {
+		jvmArgs "-javaagent:${byteBuddyAgent.absolutePath}"
+		logger.lifecycle("Configured -javaagent for Mockito: ${byteBuddyAgent.absolutePath}")
+	} else {
+		logger.warn("Could not find byte-buddy-agent in testRuntimeClasspath. The Mockito warning might persist.")
+	}
 }

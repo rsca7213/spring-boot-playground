@@ -5,6 +5,7 @@ import com.playground.api.dtos.product.*;
 import com.playground.api.entities.Product;
 import com.playground.api.enums.ProductCategory;
 import com.playground.api.integrations.ports.MultimediaStorageService;
+import com.playground.api.repositories.MultimediaRepository;
 import com.playground.api.repositories.ProductRepository;
 import com.playground.api.utils.MultimediaUtils;
 import org.junit.jupiter.api.Assertions;
@@ -29,6 +30,9 @@ import java.util.UUID;
 public class ProductServiceTests {
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private MultimediaRepository multimediaRepository;
 
     @Mock
     private MultimediaStorageService multimediaStorageService;
@@ -235,6 +239,9 @@ public class ProductServiceTests {
 
         // Mock the multimediaStorageService to generate a public URL
         Mockito.when(multimediaStorageService.generatePublicUrl(imageUri)).thenReturn(imageUrl);
+
+        // Mock the multimediaRepository to save the multimedia entity
+        Mockito.when(multimediaRepository.save(Mockito.any())).thenReturn(null);
 
         // Call the uploadProductImage method
         UploadProductImageResponse response = productService.uploadProductImage(uuid, mockFile);

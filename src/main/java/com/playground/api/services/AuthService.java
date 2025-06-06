@@ -1,9 +1,6 @@
 package com.playground.api.services;
 
-import com.playground.api.dtos.auth.LoginUserBody;
-import com.playground.api.dtos.auth.LoginUserResponse;
-import com.playground.api.dtos.auth.RegisterUserBody;
-import com.playground.api.dtos.auth.RegisterUserResponse;
+import com.playground.api.dtos.auth.*;
 import com.playground.api.entities.Role;
 import com.playground.api.entities.User;
 import com.playground.api.enums.ErrorCode;
@@ -14,6 +11,7 @@ import com.playground.api.repositories.UserRepository;
 import com.playground.api.utils.AuthUserJwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -90,5 +88,24 @@ public class AuthService {
                 .token(token)
                 .build();
 
+    }
+
+    public GetCurrentUserResponse getCurrentUser(Authentication authentication) {
+        // Check if the user is authenticated
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new Exception("User is not authenticated", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+        }
+
+        // Get the authenticated user from the security context
+        AuthUser authUser = (AuthUser) authentication.getPrincipal();
+
+        // Return the response with the authenticated user's details
+        return GetCurrentUserResponse.builder()
+                .id(authUser.getId())
+                .email(authUser.getEmail())
+                .firstName(authUser.getFirstName())
+                .lastName(authUser.getLastName())
+                .roleName(authUser.getRoleName())
+                .build();
     }
 }

@@ -44,6 +44,21 @@ public class AuthController {
     )
     @PostMapping("/login")
     public ResponseEntity<LoginUserResponse> loginUser(@Valid @RequestBody LoginUserBody requestBody) {
-        return ResponseEntity.ok(authService.loginUser(requestBody));
+        LoginUserResponse loginUserResponse = authService.loginUser(requestBody);
+
+        // If the request body indicates that the token should be set as an HTTP-only cookie
+        if (requestBody.isHttpOnlyCookie()) {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .header(
+                            "Set-Cookie",
+                            "auth=" + loginUserResponse.getToken() + "; HttpOnly; Path=/; SameSite=Strict"
+                    )
+                    .body(LoginUserResponse.builder().build());
+        }
+
+        // If the token should be returned in the response body
+        return ResponseEntity.ok(loginUserResponse);
+
     }
 }

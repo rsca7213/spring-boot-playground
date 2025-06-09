@@ -1,7 +1,6 @@
 package com.playground.api.controllers;
 
 import com.playground.api.dtos.auth.*;
-import com.playground.api.models.AuthUser;
 import com.playground.api.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

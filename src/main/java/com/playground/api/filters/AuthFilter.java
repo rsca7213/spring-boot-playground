@@ -95,6 +95,13 @@ public class AuthFilter extends OncePerRequestFilter {
             // Set the authentication in the security context holder
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         } catch (Exception e) {
+            // Clean the authentication cookie
+            Cookie authCookie = new Cookie("auth", "");
+            authCookie.setHttpOnly(true);
+            authCookie.setPath("/");
+            authCookie.setMaxAge(0);
+            response.addCookie(authCookie);
+
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             ErrorResponse errorResponse = ErrorResponse.builder()
                     .status(HttpStatus.UNAUTHORIZED.value())

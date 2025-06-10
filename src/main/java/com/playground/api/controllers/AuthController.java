@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -59,5 +61,25 @@ public class AuthController {
     @GetMapping("/current-user")
     public ResponseEntity<GetCurrentUserResponse> getCurrentUser(Authentication authentication) {
         return ResponseEntity.ok(authService.getCurrentUser(authentication));
+    }
+
+    @Operation(
+            summary = "Logout user",
+            description = "Logs out the current user by invalidating the authentication cookie."
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logoutUser() {
+        // Build a new cookie with an empty value and maxAge of 0 to invalidate it.
+        ResponseCookie cookie = ResponseCookie.from("auth", "")
+                .httpOnly(true)
+                .path("/")
+                .sameSite("Strict")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 }

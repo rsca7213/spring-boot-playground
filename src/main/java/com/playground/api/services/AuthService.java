@@ -65,7 +65,7 @@ public class AuthService {
                 .build();
     }
 
-    public LoginUserResponse loginUser(LoginUserBody loginUserBody) {
+    public String loginUser(LoginUserBody loginUserBody) {
         // Find the user by email
         User user = userRepository.findByEmailIgnoreCase(loginUserBody.getEmail());
 
@@ -81,12 +81,9 @@ public class AuthService {
 
         // Generate a JWT token for the authenticated user
         AuthUser authUser = AuthUser.fromUser(user);
-        String token = authUserJwtUtils.generateToken(authUser);
 
-        // Return the response with the token and user details
-        return LoginUserResponse.builder()
-                .token(token)
-                .build();
+        // Return the response token;
+        return authUserJwtUtils.generateToken(authUser);
 
     }
 

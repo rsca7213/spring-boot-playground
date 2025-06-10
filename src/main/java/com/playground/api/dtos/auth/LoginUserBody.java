@@ -26,10 +26,4 @@ public class LoginUserBody {
     @NotBlank
     @Size(min = 10)
     String password;
-
-    @Schema(
-            description = "If the token should be set as an HTTP-only cookie (recommended) or returned in the response body",
-            example = "true"
-    )
-    boolean httpOnlyCookie;
 }

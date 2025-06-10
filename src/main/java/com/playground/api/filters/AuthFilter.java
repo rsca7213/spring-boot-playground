@@ -9,6 +9,7 @@ import com.playground.api.repositories.UserRepository;
 import com.playground.api.utils.AuthUserJwtUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Optional;
 
 @Component
 public class AuthFilter extends OncePerRequestFilter {
@@ -35,17 +38,27 @@ public class AuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        // Extract the JWT auth token from the request header
-        String authToken = request.getHeader("Authorization");
+        // Extract the JWT auth token from a server HTTP-Only cookie named "auth"
+        String token = null;
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null) {
+            Optional<String> value = Arrays.stream(cookies)
+                    .filter(cookie -> "auth".equals(cookie.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst();
+
+            if (value.isPresent()) {
+                token = value.get();
+            }
+        }
+
 
         // If the token is not present, continue the filter chain
-        if (authToken == null || !authToken.startsWith("Bearer ")) {
+        if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        // Remove the "Bearer " prefix from the token
-        String token = authToken.substring(7);
 
         try {
             // Extract the authenticated user from the JWT token

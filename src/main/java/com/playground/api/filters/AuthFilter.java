@@ -18,22 +18,39 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Component
 public class AuthFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final AuthUserJwtUtils authUserJwtUtils;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    private static final List<String> EXCLUDED_PATHS = List.of(
+            "/auth/login",
+            "/actuator/health",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/docs/**"
+    );
 
     @Autowired
     public AuthFilter(UserRepository userRepository, AuthUserJwtUtils authUserJwtUtils) {
         this.userRepository = userRepository;
         this.authUserJwtUtils = authUserJwtUtils;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return EXCLUDED_PATHS.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 
     @Override

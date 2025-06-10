@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -19,6 +20,9 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authentication", description = "Endpoints for user authentication and authorization")
 public class AuthController {
     private final AuthService authService;
+
+    @Value("${jwt.expiration}")
+    private String jwtExpiration;
 
     @Autowired
     public AuthController(AuthService authService) {
@@ -48,7 +52,7 @@ public class AuthController {
                 .status(HttpStatus.OK)
                 .header(
                         "Set-Cookie",
-                        "auth=" + token + "; HttpOnly; Path=/; SameSite=Strict"
+                        "auth=" + token + "; HttpOnly; Path=/; SameSite=Strict; Max-Age=" + jwtExpiration
                 )
                 .body(LoginUserResponse.builder().success(true).build());
     }

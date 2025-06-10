@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
+
 public abstract class JwtUtils<T extends JwtPayload> {
     @Value("${jwt.secret}")
     protected String jwtSecret;
@@ -31,11 +33,13 @@ public abstract class JwtUtils<T extends JwtPayload> {
 
     public String generateToken(T payload) {
         String subject = payload.getId() != null ? payload.getId().toString() : null;
+        String jti = UUID.randomUUID().toString();
 
         return Jwts.builder()
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000))
                 .issuedAt(new Date())
                 .issuer(jwtIssuer)
+                .id(jti)
                 .subject(subject)
                 .claims(payload.toMap())
                 .signWith(jwtKey)

@@ -208,4 +208,13 @@ VALUES
         80,
         (SELECT id FROM multimedia WHERE uri = 'generic.png'),
         'SPORTS'
-    );
+    ),
+    (
+        gen_random_uuid(),
+        'Tennis Racket',
+        'A lightweight tennis racket for beginners and pros.',
+        89.99,
+        0,
+        (SELECT id FROM multimedia WHERE uri = 'generic.png'),
+        'SPORTS'
+    )

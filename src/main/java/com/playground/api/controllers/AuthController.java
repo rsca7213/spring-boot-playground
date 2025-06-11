@@ -3,6 +3,7 @@ package com.playground.api.controllers;
 import com.playground.api.dtos.auth.*;
 import com.playground.api.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,9 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Register a new user",
-            description = "Registers a new user with the provided details. Returns the created user's information."
+            summary = "Register a new user (ADMIN)",
+            description = "Registers a new user with the provided details. Returns the created user's information. (Roles: ADMIN)",
+            security = @SecurityRequirement(name = "cookieAuth")
     )
     @PostMapping("/register")
     @PreAuthorize("hasRole('ADMIN')")
@@ -59,8 +61,9 @@ public class AuthController {
 
 
     @Operation(
-            summary = "Get current authenticated user",
-            description = "Returns the details of the currently authenticated user."
+            summary = "Get current authenticated user (ADMIN, CLIENT)",
+            description = "Returns the details of the currently authenticated user. (Roles: ADMIN, CLIENT)",
+            security = @SecurityRequirement(name = "cookieAuth")
     )
     @GetMapping("/current-user")
     public ResponseEntity<GetCurrentUserResponse> getCurrentUser(Authentication authentication) {
@@ -68,8 +71,9 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Logout user",
-            description = "Logs out the current user by invalidating the authentication cookie."
+            summary = "Logout user (ADMIN, CLIENT)",
+            description = "Logs out the current user by invalidating the authentication cookie. (Roles: ADMIN, CLIENT)",
+            security = @SecurityRequirement(name = "cookieAuth")
     )
     @PostMapping("/logout")
     public ResponseEntity<Void> logoutUser() {

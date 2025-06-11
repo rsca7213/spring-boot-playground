@@ -5,6 +5,7 @@ import com.playground.api.dtos.product.*;
 import com.playground.api.services.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +29,9 @@ public class ProductController {
     }
 
     @Operation(
-            summary = "Create a new product",
-            description = "Creates a new product with the provided details. Returns the created product."
+            summary = "Create a new product (ADMIN)",
+            description = "Creates a new product with the provided details. Returns the created product. (Roles: ADMIN)",
+            security = @SecurityRequirement(name = "cookieAuth")
     )
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -38,8 +40,9 @@ public class ProductController {
     }
 
     @Operation(
-            summary = "List and paginate products",
-            description = "Lists products with pagination support. Returns a paginated response containing the products."
+            summary = "List and paginate products (ADMIN, CLIENT)",
+            description = "Lists products with pagination support. Returns a paginated response containing the products. (Roles: ADMIN, CLIENT)",
+            security = @SecurityRequirement(name = "cookieAuth")
     )
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
@@ -48,8 +51,9 @@ public class ProductController {
     }
 
     @Operation(
-            summary = "Find a product by ID",
-            description = "Retrieves a product by its ID. Returns the product details."
+            summary = "Find a product by ID (ADMIN, CLIENT)",
+            description = "Retrieves a product by its ID. Returns the product details. (Roles: ADMIN, CLIENT)",
+            security = @SecurityRequirement(name = "cookieAuth")
     )
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
@@ -64,8 +68,9 @@ public class ProductController {
     }
 
     @Operation(
-            summary = "Update a product's image",
-            description = "Updates an existing product's image. The product ID is provided in the request parameters, and the image file is uploaded as a multipart file. Returns the updated product image details."
+            summary = "Update a product's image (ADMIN)",
+            description = "Updates an existing product's image. The product ID is provided in the request parameters, and the image file is uploaded as a multipart file. Returns the updated product image details. (Roles: ADMIN)",
+            security = @SecurityRequirement(name = "cookieAuth")
     )
     @PutMapping(value = "/{productId}/image", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")

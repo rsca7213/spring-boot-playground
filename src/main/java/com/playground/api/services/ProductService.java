@@ -87,7 +87,7 @@ public class ProductService {
         Specification<Product> specification = Specification.where(null);
 
         // Add filters to the specification based on the request
-        specification
+        specification = specification
                 .and(SpecificationUtils.optional(request.getName(), ProductSpecifications::nameContains))
                 .and(SpecificationUtils.optional(request.getCategory(), ProductSpecifications::inCategory))
                 .and(SpecificationUtils.optional(request.getHasStock(), ProductSpecifications::hasStock))

@@ -81,7 +81,7 @@ public class AuthServiceTests {
                 .build();
 
         loginUserResponse = LoginUserResponse.builder()
-                .token(accessToken)
+                .success(true)
                 .build();
 
     }
@@ -160,7 +160,7 @@ public class AuthServiceTests {
         Mockito.when(authUserJwtUtils.generateToken(Mockito.any())).thenReturn(accessToken);
 
         // Call the loginUser method
-        loginUserResponse = authService.loginUser(loginUserBody);
+        String token = authService.loginUser(loginUserBody);
 
         // Verify that the user repository was called with the correct email
         Mockito.verify(userRepository).findByEmailIgnoreCase(loginUserBody.getEmail());
@@ -171,8 +171,8 @@ public class AuthServiceTests {
         // Verify that the JWT utility was called to generate a token
         Mockito.verify(authUserJwtUtils).generateToken(Mockito.any());
 
-        // Assert that the response contains the expected access token
-        Assertions.assertEquals(accessToken, loginUserResponse.getToken());
+        // Assert that the response token is as expected
+        Assertions.assertEquals(accessToken, token);
     }
 
     @Test

@@ -17,6 +17,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'corretto'
+          cache: 'gradle'
 
       - name: Grant Execute Permissions to gradlew
         run: chmod +x gradlew

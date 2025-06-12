@@ -19,7 +19,7 @@ jobs:
       # Spring Security configuration
       SECURITY_USER_NAME: "test"
       SECURITY_USER_PASSWORD: "test"
-      JWT_SECRET: "test"
+      JWT_SECRET: "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest"
       JWT_ISSUER: "test"
 
       # AWS Configuration

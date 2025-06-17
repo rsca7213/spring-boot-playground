@@ -30,4 +30,9 @@ public class ProductSpecifications {
         return (root, query, cb) ->
                 cb.lessThanOrEqualTo(root.get("price"), max);
     }
+
+    public static Specification<Product> notDeleted() {
+        return (root, query, cb) ->
+                cb.isFalse(root.get("isDeleted"));
+    }
 }

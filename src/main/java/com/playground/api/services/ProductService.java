@@ -49,7 +49,7 @@ public class ProductService {
         Optional<Product> existingProduct = Optional.ofNullable(productRepository.findByNameIgnoreCase(request.getName()));
 
         // If a product with the same name exists, throw an exception
-        if (existingProduct.isPresent()) {
+        if (existingProduct.isPresent() && !existingProduct.get().isDeleted()) {
             throw new Exception("A product with the same name already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
         }
 
@@ -92,7 +92,8 @@ public class ProductService {
                 .and(SpecificationUtils.optional(request.getCategory(), ProductSpecifications::inCategory))
                 .and(SpecificationUtils.optional(request.getHasStock(), ProductSpecifications::hasStock))
                 .and(SpecificationUtils.optional(request.getMinPrice(), ProductSpecifications::priceAtLeast))
-                .and(SpecificationUtils.optional(request.getMaxPrice(), ProductSpecifications::priceAtMost));
+                .and(SpecificationUtils.optional(request.getMaxPrice(), ProductSpecifications::priceAtMost))
+                .and(ProductSpecifications.notDeleted());
 
         // Fetch all the products from the repository with given filters
         Page<Product> page = productRepository.findAll(
@@ -121,6 +122,11 @@ public class ProductService {
         Product product = productRepository.findById(id).orElseThrow(
                 () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
         );
+
+        // If the product is marked as deleted, it does not exist anymore
+        if (product.isDeleted()) {
+            throw new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
 
         // Return the product information
         return FindProductResponse.builder()
@@ -155,6 +161,11 @@ public class ProductService {
                 () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
         );
 
+        // If the product is marked as deleted, it does not exist anymore
+        if (product.isDeleted()) {
+            throw new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+
         // Upload the file into the multimedia storage service
         String uri = multimediaStorageService.upload(file, fileName);
 
@@ -181,6 +192,11 @@ public class ProductService {
         Product product = productRepository.findById(id).orElseThrow(
                 () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
         );
+
+        // If the product is marked as deleted, it does not exist anymore
+        if (product.isDeleted()) {
+            throw new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
 
         // If the product name is being changed, check for duplicates
         if (!product.getName().equalsIgnoreCase(request.getName())) {
@@ -214,5 +230,21 @@ public class ProductService {
                                 : null
                 )
                 .build();
+    }
+
+    public void deleteProduct(UUID id) {
+        // Attempt to find a product with the given ID
+        Product product = productRepository.findById(id).orElseThrow(
+                () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
+        );
+
+        // If the product is marked as deleted, it does not exist anymore
+        if (product.isDeleted()) {
+            throw new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+
+        // Delete the product from the repository
+        product.setDeleted(true);
+        productRepository.save(product);
     }
 }

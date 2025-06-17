@@ -102,4 +102,22 @@ public class ProductController {
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.uploadProductImage(productId, file));
     }
+
+    @Operation(
+            summary = "Delete a product (ADMIN)",
+            description = "Deletes a product by its ID. (Roles: ADMIN)",
+            security = @SecurityRequirement(name = "cookieAuth")
+    )
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProduct(
+            @Parameter(
+                    description = "The unique identifier of the product to delete",
+                    example = "123e4567-e89b-12d3-a456-426614174000",
+                    required = true
+            ) @PathVariable UUID id
+    ) {
+        productService.deleteProduct(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
 }

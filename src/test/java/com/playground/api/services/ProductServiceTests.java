@@ -46,12 +46,14 @@ public class ProductServiceTests {
     // Request DTOs
     private CreateProductBody createProductBody;
     private ListProductsQuery listProductsQuery;
+    private UpdateProductBody updateProductBody;
 
     // Response DTOs
     private CreateProductResponse createProductResponse;
     private ListProductsResponse listProductsResponse;
     private FindProductResponse findProductResponse;
     private UploadProductImageResponse uploadProductImageResponse;
+    private UpdateProductResponse updateProductResponse;
 
     // Entities
     private Product product;
@@ -89,6 +91,14 @@ public class ProductServiceTests {
                 .hasStock(true)
                 .build();
 
+        updateProductBody = UpdateProductBody.builder()
+                .name(product.getName())
+                .description(product.getDescription())
+                .category(product.getCategory())
+                .price(product.getPrice())
+                .stockQuantity(product.getStockQuantity())
+                .build();
+
         // Set up response DTOs
         createProductResponse = CreateProductResponse.builder()
                 .id(product.getId())
@@ -122,6 +132,16 @@ public class ProductServiceTests {
         uploadProductImageResponse = UploadProductImageResponse.builder()
                 .productId(product.getId())
                 .url(imageUrl)
+                .build();
+
+        updateProductResponse = UpdateProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .category(product.getCategory())
+                .price(product.getPrice())
+                .stockQuantity(product.getStockQuantity())
+                .imageUrl(null)
                 .build();
     }
 
@@ -291,6 +311,90 @@ public class ProductServiceTests {
         Exception exception = Assertions.assertThrows(
                 Exception.class,
                 () -> productService.uploadProductImage(uuid, mockFile)
+        );
+
+        // Assert that the exception message is as expected
+        Assertions.assertEquals("A product with the given ID does not exist", exception.getMessage());
+    }
+
+    @Test
+    void updateProduct_Success() {
+        // Mock the product repository to return the product by ID
+        Mockito.when(productRepository.findById(uuid)).thenReturn(Optional.of(product));
+        Mockito.when(productRepository.save(Mockito.any(Product.class))).thenReturn(product);
+
+        // Call the updateProduct method
+        UpdateProductResponse response = productService.updateProduct(uuid, updateProductBody);
+
+        // Verify that the product repository was called with the correct ID
+        Mockito.verify(productRepository).findById(uuid);
+        Mockito.verify(productRepository).save(Mockito.any(Product.class));
+
+        // Assert that the response contains the expected product details
+        Assertions.assertEquals(updateProductResponse, response);
+    }
+
+    @Test
+    void updateProduct_NotFound() {
+        // Mock the product repository to return an empty Optional for the given ID
+        Mockito.when(productRepository.findById(uuid)).thenReturn(Optional.empty());
+
+        // Call the updateProduct method and expect an exception
+        Exception exception = Assertions.assertThrows(
+                Exception.class,
+                () -> productService.updateProduct(uuid, updateProductBody)
+        );
+
+        // Assert that the exception message is as expected
+        Assertions.assertEquals("A product with the given ID does not exist", exception.getMessage());
+    }
+
+    @Test
+    void updateProduct_NameAlreadyExists() {
+        UpdateProductBody updateProductBody = UpdateProductBody.builder()
+                .name(product.getName() + " Updated")
+                .description(product.getDescription())
+                .category(product.getCategory())
+                .price(product.getPrice())
+                .stockQuantity(product.getStockQuantity())
+                .build();
+
+        // Mock the product repository to return a product with the same name
+        Mockito.when(productRepository.findById(uuid)).thenReturn(Optional.of(product));
+        Mockito.when(productRepository.findByNameIgnoreCase(updateProductBody.getName())).thenReturn(product);
+
+        // Call the updateProduct method and expect an exception
+        Exception exception = Assertions.assertThrows(
+                Exception.class,
+                () -> productService.updateProduct(uuid, updateProductBody)
+        );
+
+        // Assert that the exception message is as expected
+        Assertions.assertEquals("A product with the same name already exists", exception.getMessage());
+    }
+
+    @Test
+    void deleteProduct_Success() {
+        // Mock the product repository to return the product by ID
+        Mockito.when(productRepository.findById(uuid)).thenReturn(Optional.of(product));
+
+        // Call the deleteProduct method
+        productService.deleteProduct(uuid);
+
+        // Verify that the product repository was called with the correct ID
+        Mockito.verify(productRepository).findById(uuid);
+        Mockito.verify(productRepository).save(Mockito.any(Product.class));
+    }
+
+    @Test
+    void deleteProduct_NotFound() {
+        // Mock the product repository to return an empty Optional for the given ID
+        Mockito.when(productRepository.findById(uuid)).thenReturn(Optional.empty());
+
+        // Call the deleteProduct method and expect an exception
+        Exception exception = Assertions.assertThrows(
+                Exception.class,
+                () -> productService.deleteProduct(uuid)
         );
 
         // Assert that the exception message is as expected

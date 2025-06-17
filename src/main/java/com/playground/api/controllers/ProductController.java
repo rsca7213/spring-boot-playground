@@ -40,6 +40,24 @@ public class ProductController {
     }
 
     @Operation(
+            summary = "Update an existing product (ADMIN)",
+            description = "Updates an existing product with the provided details. Returns the updated product. (Roles: ADMIN)",
+            security = @SecurityRequirement(name = "cookieAuth")
+    )
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UpdateProductResponse> updateProduct(
+            @Parameter(
+                    description = "The unique identifier of the product to update",
+                    example = "123e4567-e89b-12d3-a456-426614174000",
+                    required = true
+            ) @PathVariable UUID id,
+            @Valid @RequestBody UpdateProductBody requestBody
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.updateProduct(id, requestBody));
+    }
+
+    @Operation(
             summary = "List and paginate products (ADMIN, CLIENT)",
             description = "Lists products with pagination support. Returns a paginated response containing the products. (Roles: ADMIN, CLIENT)",
             security = @SecurityRequirement(name = "cookieAuth")

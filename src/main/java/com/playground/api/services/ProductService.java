@@ -175,4 +175,44 @@ public class ProductService {
                 .productId(product.getId())
                 .build();
     }
+
+    public UpdateProductResponse updateProduct(UUID id, UpdateProductBody request) {
+        // Attempt to find a product with the given ID
+        Product product = productRepository.findById(id).orElseThrow(
+                () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
+        );
+
+        // If the product name is being changed, check for duplicates
+        if (!product.getName().equalsIgnoreCase(request.getName())) {
+            Optional<Product> existingProduct = Optional.ofNullable(productRepository.findByNameIgnoreCase(request.getName()));
+            if (existingProduct.isPresent()) {
+                throw new Exception("A product with the same name already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
+            }
+        }
+
+        // Update the product's fields with the new values
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setCategory(request.getCategory());
+        product.setStockQuantity(request.getStockQuantity());
+
+        // Save the updated product to the database
+        product = productRepository.save(product);
+
+        // Return the updated product information
+        return UpdateProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .category(product.getCategory())
+                .stockQuantity(product.getStockQuantity())
+                .imageUrl(
+                        product.getMultimedia() != null
+                                ? multimediaStorageService.generatePublicUrl(product.getMultimedia().getUri())
+                                : null
+                )
+                .build();
+    }
 }

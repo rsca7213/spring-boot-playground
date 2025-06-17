@@ -54,6 +54,7 @@ Check out Flyway's documentation for more details: [Flyway Documentation](https:
 ## 🛫 Features:
 
 - CRUD operations on a simple Product entity
+- An example implementation of an Insurance Policy claim creation flow
 - User and Role management
 - Authentication and Authorization using JWT and Spring Security
 - Database migrations using Flyway

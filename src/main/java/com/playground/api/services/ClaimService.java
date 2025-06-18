@@ -16,7 +16,6 @@
 
     import java.util.HashSet;
     import java.util.List;
-    import java.util.stream.Collectors;
 
     @Service
     public class ClaimService {
@@ -137,9 +136,7 @@
             final Claim generatedClaim = claimRepository.save(claim);
 
             // Assign the coverages to the claim
-            claimCoverages.forEach(claimCoverage -> {
-                claimCoverage.setClaim(generatedClaim);
-            });
+            claimCoverages.forEach(claimCoverage -> claimCoverage.setClaim(generatedClaim));
             generatedClaim.setCoverages(new HashSet<>(claimCoverages));
 
             // Save the claim coverages to the repository

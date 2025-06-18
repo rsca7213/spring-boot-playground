@@ -5,22 +5,20 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Entity
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "claims")
 public class Claim extends DataEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", unique = true, nullable = false)
     private Integer id;
 
@@ -32,4 +30,11 @@ public class Claim extends DataEntity {
     @NotNull
     @Column(name = "claim_date", nullable = false)
     private LocalDate claimDate;
+
+    @ManyToOne
+    @JoinColumn(name = "policy_id", nullable = false)
+    private Policy policy;
+
+    @OneToMany(mappedBy = "claim")
+    private Set<ClaimCoverage> coverages;
 }

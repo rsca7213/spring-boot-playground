@@ -6,26 +6,25 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "claims_coverages")
 @IdClass(ClaimCoverageId.class)
 public class ClaimCoverage extends DataEntity {
     @Id
-    @Column(name = "claim_id", nullable = false)
-    private Integer claimId;
+    @ManyToOne
+    @JoinColumn(name = "claim_id", nullable = false)
+    private Claim claim;
 
     @Id
-    @Column(name = "coverage_id", nullable = false)
-    private Integer coverageId;
+    @ManyToOne
+    @JoinColumn(name = "coverage_id", nullable = false)
+    private Coverage coverage;
 
     @NotNull
     @Positive

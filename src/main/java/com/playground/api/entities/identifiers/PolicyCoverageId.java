@@ -1,5 +1,7 @@
 package com.playground.api.entities.identifiers;
 
+import com.playground.api.entities.Coverage;
+import com.playground.api.entities.Policy;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,19 +13,19 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PolicyCoverageId implements Serializable {
-    private Integer policyId;
-    private Integer coverageId;
+    private Policy policy;
+    private Coverage coverage;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof PolicyCoverageId that)) return false;
 
-        return policyId.equals(that.policyId) && coverageId.equals(that.coverageId);
+        return policy.getId().equals(that.policy.getId()) && coverage.getId().equals(that.coverage.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(policyId, coverageId);
+        return Objects.hash(policy.getId(), coverage.getId());
     }
 }

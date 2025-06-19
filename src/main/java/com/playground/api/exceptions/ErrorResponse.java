@@ -1,5 +1,6 @@
 package com.playground.api.exceptions;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.playground.api.enums.ErrorCode;
 import lombok.Builder;
@@ -15,7 +16,10 @@ public class ErrorResponse {
     private int status;
     private String statusText;
     private String message;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private LocalDateTime timestamp;
+
     private ErrorCode errorCode;
     private Map<String, String> errors;
     private String originalException;

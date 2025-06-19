@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Value;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -58,6 +59,6 @@ public class CreateClaimBody {
         )
         @Positive
         @DecimalMin("0.01")
-        Double amount;
+        BigDecimal amount;
     }
 }

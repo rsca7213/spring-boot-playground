@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -30,5 +32,5 @@ public class ClaimCoverage extends DataEntity {
     @Positive
     @DecimalMin(value = "0.01")
     @Column(name = "amount", nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 }

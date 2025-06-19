@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -26,7 +27,7 @@ public class Policy extends DataEntity {
     @Positive
     @DecimalMin(value = "0.00")
     @Column(name = "balance", nullable = false)
-    private Double balance;
+    private BigDecimal balance;
 
     @NotNull
     @Column(name = "expedition_date", nullable = false)

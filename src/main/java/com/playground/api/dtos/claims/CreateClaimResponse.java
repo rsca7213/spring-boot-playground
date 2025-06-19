@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Value;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -68,9 +69,9 @@ public class CreateClaimResponse {
     @Schema(description = "Total amount in different currencies")
     public static class TotalAmount {
         @Schema(description = "The amount in UF", example = "250.00")
-        Double uf;
+        BigDecimal uf;
 
         @Schema(description = "The amount in Chilean Pesos (CLP)", example = "300000.00")
-        Double clp;
+        BigDecimal clp;
     }
 }

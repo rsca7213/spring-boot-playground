@@ -19,11 +19,9 @@ public class ClaimUtils {
         );
     }
 
-    public Double currencyUfToClp(Double amount) {
-        BigDecimal bdAmount = new BigDecimal(String.valueOf(amount));
+    public BigDecimal currencyUfToClp(BigDecimal amount) {
         final BigDecimal conversionRate = new BigDecimal("39235.70");
-        BigDecimal conversion = bdAmount.multiply(conversionRate);
-        return conversion.setScale(2, RoundingMode.HALF_UP)
-                .doubleValue();
+        BigDecimal conversion = amount.multiply(conversionRate);
+        return conversion.setScale(2, RoundingMode.HALF_UP);
     }
 }

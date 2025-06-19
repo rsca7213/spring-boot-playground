@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -30,5 +32,5 @@ public class PolicyCoverage extends DataEntity {
     @Positive
     @DecimalMin(value = "0.00")
     @Column(name = "limit", nullable = false)
-    private Double limit;
+    private BigDecimal limit;
 }

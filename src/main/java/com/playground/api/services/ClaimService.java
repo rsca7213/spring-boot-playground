@@ -5,6 +5,7 @@ import com.playground.api.dtos.claims.CreateClaimResponse;
 import com.playground.api.entities.*;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.ApiException;
+import com.playground.api.mappers.ClaimMapper;
 import com.playground.api.repositories.ClaimCoverageRepository;
 import com.playground.api.repositories.ClaimRepository;
 import com.playground.api.repositories.PolicyRepository;
@@ -26,18 +27,21 @@ public class ClaimService {
     private final ClaimCoverageRepository claimCoverageRepository;
     private final PolicyRepository policyRepository;
     private final ClaimUtils claimUtils;
+    private final ClaimMapper claimMapper;
 
     @Autowired
     public ClaimService(
             ClaimRepository claimRepository,
             ClaimCoverageRepository claimCoverageRepository,
             PolicyRepository policyRepository,
-            ClaimUtils claimUtils
+            ClaimUtils claimUtils,
+            ClaimMapper claimMapper
     ) {
         this.claimRepository = claimRepository;
         this.claimCoverageRepository = claimCoverageRepository;
         this.policyRepository = policyRepository;
         this.claimUtils = claimUtils;
+        this.claimMapper = claimMapper;
     }
 
     @Transactional
@@ -134,42 +138,6 @@ public class ClaimService {
         policyRepository.save(policy);
 
         // Return the claim response object
-        return CreateClaimResponse.builder()
-                .claimDetails(
-                        CreateClaimResponse.ClaimDetails.builder()
-                                .id(generatedClaim.getId())
-                                .number(generatedClaim.getNumber())
-                                .date(generatedClaim.getClaimDate())
-                                .totalAmount(
-                                        CreateClaimResponse.TotalAmount.builder()
-                                                .uf(totalClaimedAmount)
-                                                .clp(claimUtils.currencyUfToClp(totalClaimedAmount))
-                                                .build()
-                                )
-                                .build()
-                )
-                .policyDetails(
-                        CreateClaimResponse.PolicyDetails.builder()
-                                .id(policy.getId())
-                                .remainingBalance(
-                                        CreateClaimResponse.TotalAmount.builder()
-                                                .uf(policy.getBalance())
-                                                .clp(claimUtils.currencyUfToClp(policy.getBalance()))
-                                                .build()
-                                )
-                                .build()
-                )
-                .damages(generatedClaim.getCoverages().stream().map(
-                        coverage -> CreateClaimResponse.ClaimDamageItem.builder()
-                                .coverageName(coverage.getCoverage().getName())
-                                .amount(
-                                        CreateClaimResponse.TotalAmount.builder()
-                                                .uf(coverage.getAmount())
-                                                .clp(claimUtils.currencyUfToClp(coverage.getAmount()))
-                                                .build()
-                                )
-                                .build()
-                ).toList())
-                .build();
+        return claimMapper.claimToCreateClaimResponse(generatedClaim, totalClaimedAmount);
     }
 }

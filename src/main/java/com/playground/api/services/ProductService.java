@@ -3,7 +3,7 @@ package com.playground.api.services;
 import com.playground.api.dtos.common.PaginationResponse;
 import com.playground.api.dtos.product.*;
 import com.playground.api.enums.ErrorCode;
-import com.playground.api.exceptions.Exception;
+import com.playground.api.exceptions.ApiException;
 import com.playground.api.integrations.ports.MultimediaStorageService;
 import com.playground.api.entities.Multimedia;
 import com.playground.api.entities.Product;
@@ -50,7 +50,7 @@ public class ProductService {
 
         // If a product with the same name exists, throw an exception
         if (existingProduct.isPresent() && !existingProduct.get().isDeleted()) {
-            throw new Exception("A product with the same name already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
+            throw new ApiException("A product with the same name already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
         }
 
         // Create a new product entity
@@ -120,12 +120,12 @@ public class ProductService {
     public FindProductResponse findProductById(UUID id) {
         // Attempt to find a product with the given ID
         Product product = productRepository.findById(id).orElseThrow(
-                () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
+                () -> new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
         );
 
         // If the product is marked as deleted, it does not exist anymore
         if (product.isDeleted()) {
-            throw new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
 
         // Return the product information
@@ -147,7 +147,7 @@ public class ProductService {
     public UploadProductImageResponse uploadProductImage(UUID productId, MultipartFile file) {
         // Verify that the file is not empty
         if (file.isEmpty()) {
-            throw new Exception("The uploaded file is empty", ErrorCode.FILE_CONTENT_ERROR, HttpStatus.BAD_REQUEST);
+            throw new ApiException("The uploaded file is empty", ErrorCode.FILE_CONTENT_ERROR, HttpStatus.BAD_REQUEST);
         }
 
         // Validate the file and extract the extension
@@ -158,12 +158,12 @@ public class ProductService {
 
         // Verify that the product by given ID exists
         Product product = productRepository.findById(productId).orElseThrow(
-                () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
+                () -> new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
         );
 
         // If the product is marked as deleted, it does not exist anymore
         if (product.isDeleted()) {
-            throw new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
 
         // Upload the file into the multimedia storage service
@@ -190,19 +190,19 @@ public class ProductService {
     public UpdateProductResponse updateProduct(UUID id, UpdateProductBody request) {
         // Attempt to find a product with the given ID
         Product product = productRepository.findById(id).orElseThrow(
-                () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
+                () -> new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
         );
 
         // If the product is marked as deleted, it does not exist anymore
         if (product.isDeleted()) {
-            throw new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
 
         // If the product name is being changed, check for duplicates
         if (!product.getName().equalsIgnoreCase(request.getName())) {
             Optional<Product> existingProduct = Optional.ofNullable(productRepository.findByNameIgnoreCase(request.getName()));
             if (existingProduct.isPresent()) {
-                throw new Exception("A product with the same name already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
+                throw new ApiException("A product with the same name already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
             }
         }
 
@@ -235,12 +235,12 @@ public class ProductService {
     public void deleteProduct(UUID id) {
         // Attempt to find a product with the given ID
         Product product = productRepository.findById(id).orElseThrow(
-                () -> new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
+                () -> new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND)
         );
 
         // If the product is marked as deleted, it does not exist anymore
         if (product.isDeleted()) {
-            throw new Exception("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
 
         // Delete the product from the repository

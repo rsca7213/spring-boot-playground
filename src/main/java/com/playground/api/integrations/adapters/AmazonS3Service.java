@@ -1,7 +1,7 @@
 package com.playground.api.integrations.adapters;
 
 import com.playground.api.enums.ErrorCode;
-import com.playground.api.exceptions.Exception;
+import com.playground.api.exceptions.ApiException;
 import com.playground.api.integrations.ports.MultimediaStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,11 +53,11 @@ public class AmazonS3Service implements MultimediaStorageService {
                 return fileName;
             }
 
-            throw new Exception("An error occurred while uploading the file", ErrorCode.FILE_UPLOAD_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ApiException("An error occurred while uploading the file", ErrorCode.FILE_UPLOAD_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IOException ioe) {
-            throw new Exception("An error occurred while reading the file content", ErrorCode.FILE_READ_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception e) {
-            throw new Exception("An error occurred while uploading the file", ErrorCode.FILE_UPLOAD_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ApiException("An error occurred while reading the file content", ErrorCode.FILE_READ_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (ApiException e) {
+            throw new ApiException("An error occurred while uploading the file", ErrorCode.FILE_UPLOAD_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
 

@@ -1,7 +1,7 @@
 package com.playground.api.utils.ports;
 
 import com.playground.api.enums.ErrorCode;
-import com.playground.api.exceptions.Exception;
+import com.playground.api.exceptions.ApiException;
 import com.playground.api.models.JwtPayload;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -58,16 +58,16 @@ public abstract class JwtUtils<T extends JwtPayload> {
             T payload = createPayloadInstance(claims);
 
             if (payload.getId() == null) {
-                throw new Exception("Invalid token", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+                throw new ApiException("Invalid token", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
             }
             return payload;
 
         } catch (SecurityException | MalformedJwtException | IllegalArgumentException e) {
-            throw new Exception("Invalid token", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+            throw new ApiException("Invalid token", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
         } catch (ExpiredJwtException e) {
-            throw new Exception("Token has expired", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+            throw new ApiException("Token has expired", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
         } catch (UnsupportedJwtException e) {
-            throw new Exception("Unsupported token", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+            throw new ApiException("Unsupported token", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
         }
     }
 

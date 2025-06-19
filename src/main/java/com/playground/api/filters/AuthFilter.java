@@ -2,8 +2,8 @@ package com.playground.api.filters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.playground.api.enums.ErrorCode;
+import com.playground.api.exceptions.ApiException;
 import com.playground.api.exceptions.ErrorResponse;
-import com.playground.api.exceptions.Exception;
 import com.playground.api.models.AuthUser;
 import com.playground.api.repositories.UserRepository;
 import com.playground.api.utils.AuthUserJwtUtils;
@@ -83,7 +83,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
             // Verify that said user by ID exists in the database
             if (!userRepository.existsById(authUser.getId())) {
-                throw new Exception("Authenticated user does not exist", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+                throw new ApiException("Authenticated user does not exist", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
             }
 
             // Set the authenticated user in the request context
@@ -94,7 +94,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
             // Set the authentication in the security context holder
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        } catch (Exception e) {
+        } catch (ApiException e) {
             // Clean the authentication cookie
             Cookie authCookie = new Cookie("auth", "");
             authCookie.setHttpOnly(true);

@@ -27,8 +27,8 @@ public class GlobalExceptionHandler {
         this.environment = environment;
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception ex) {
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorResponse> handleException(ApiException ex) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(ex.getStatusCode().value())
                 .statusText(ex.getStatusCode().getReasonPhrase())

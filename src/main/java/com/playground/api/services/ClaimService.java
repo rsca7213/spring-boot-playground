@@ -4,7 +4,7 @@ import com.playground.api.dtos.claims.CreateClaimBody;
 import com.playground.api.dtos.claims.CreateClaimResponse;
 import com.playground.api.entities.*;
 import com.playground.api.enums.ErrorCode;
-import com.playground.api.exceptions.Exception;
+import com.playground.api.exceptions.ApiException;
 import com.playground.api.repositories.ClaimCoverageRepository;
 import com.playground.api.repositories.ClaimRepository;
 import com.playground.api.repositories.PolicyRepository;
@@ -46,7 +46,7 @@ public class ClaimService {
 
         // Verify that the policy exists
         Policy policy = policyRepository.findById(request.getPolicyId()).orElseThrow(
-                () -> new Exception(
+                () -> new ApiException(
                         "The policy with the given ID does not exist",
                         ErrorCode.ITEM_DOES_NOT_EXIST,
                         HttpStatus.NOT_FOUND
@@ -72,7 +72,7 @@ public class ClaimService {
 
             // If the coverage does not exist, throw an exception
             if (policyCoverage == null) {
-                throw new Exception(
+                throw new ApiException(
                         "The coverage is not available in the policy",
                         ErrorCode.ITEM_DOES_NOT_EXIST,
                         HttpStatus.NOT_FOUND
@@ -84,7 +84,7 @@ public class ClaimService {
 
             // Verify that the limit of the coverage is not exceeded
             if (damage.getAmount().compareTo(policyCoverage.getLimit()) > 0) {
-                throw new Exception(
+                throw new ApiException(
                         "The amount exceeds the limit of the coverage",
                         ErrorCode.LIMIT_EXCEEDED,
                         HttpStatus.BAD_REQUEST
@@ -94,7 +94,7 @@ public class ClaimService {
 
         // Verify that the total claimed amount does not exceed the available policy balance
         if (totalClaimedAmount.compareTo(policy.getBalance()) > 0) {
-            throw new Exception(
+            throw new ApiException(
                     "The total claimed amount exceeds the available policy balance",
                     ErrorCode.LIMIT_EXCEEDED,
                     HttpStatus.BAD_REQUEST

@@ -4,7 +4,7 @@ import com.playground.api.dtos.auth.*;
 import com.playground.api.entities.Role;
 import com.playground.api.entities.User;
 import com.playground.api.enums.ErrorCode;
-import com.playground.api.exceptions.Exception;
+import com.playground.api.exceptions.ApiException;
 import com.playground.api.models.AuthUser;
 import com.playground.api.repositories.RoleRepository;
 import com.playground.api.repositories.UserRepository;
@@ -38,11 +38,11 @@ public class AuthService {
     public RegisterUserResponse registerUser(RegisterUserBody registerUserBody) {
         // Validate that the role exists
         Role role = roleRepository.findById(registerUserBody.getRoleId())
-                .orElseThrow(() -> new Exception("Role does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new ApiException("Role does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.BAD_REQUEST));
 
         // Check if the user already exists with the provided email
         if (userRepository.existsByEmailIgnoreCase(registerUserBody.getEmail())) {
-            throw new Exception("User with this email already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
+            throw new ApiException("User with this email already exists", ErrorCode.ITEM_ALREADY_EXISTS, HttpStatus.CONFLICT);
         }
 
         // Hash the password before saving
@@ -71,12 +71,12 @@ public class AuthService {
 
         // If the user does not exist, throw an exception
         if (user == null) {
-            throw new Exception("Invalid email or password", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+            throw new ApiException("Invalid email or password", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
         }
 
         // Verify the password
         if (!passwordEncoder.matches(loginUserBody.getPassword(), user.getPasswordHash())) {
-            throw new Exception("Invalid email or password", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+            throw new ApiException("Invalid email or password", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
         }
 
         // Generate a JWT token for the authenticated user
@@ -90,7 +90,7 @@ public class AuthService {
     public GetCurrentUserResponse getCurrentUser(Authentication authentication) {
         // Check if the user is authenticated
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new Exception("User is not authenticated", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
+            throw new ApiException("User is not authenticated", ErrorCode.INVALID_AUTHENTICATION, HttpStatus.UNAUTHORIZED);
         }
 
         // Get the authenticated user from the security context

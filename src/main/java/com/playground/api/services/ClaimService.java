@@ -11,6 +11,9 @@ import com.playground.api.repositories.ClaimRepository;
 import com.playground.api.repositories.PolicyRepository;
 import com.playground.api.utils.ClaimUtils;
 import jakarta.transaction.Transactional;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.ConsequenceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ public class ClaimService {
     private final PolicyRepository policyRepository;
     private final ClaimUtils claimUtils;
     private final ClaimMapper claimMapper;
+    private final KieContainer kieContainer;
 
     @Autowired
     public ClaimService(
@@ -35,13 +39,15 @@ public class ClaimService {
             ClaimCoverageRepository claimCoverageRepository,
             PolicyRepository policyRepository,
             ClaimUtils claimUtils,
-            ClaimMapper claimMapper
+            ClaimMapper claimMapper,
+            KieContainer kieContainer
     ) {
         this.claimRepository = claimRepository;
         this.claimCoverageRepository = claimCoverageRepository;
         this.policyRepository = policyRepository;
         this.claimUtils = claimUtils;
         this.claimMapper = claimMapper;
+        this.kieContainer = kieContainer;
     }
 
     @Transactional
@@ -74,35 +80,31 @@ public class ClaimService {
                     .findFirst()
                     .orElse(null);
 
-            // If the coverage does not exist, throw an exception
-            if (policyCoverage == null) {
-                throw new ApiException(
-                        "The coverage is not available in the policy",
-                        ErrorCode.ITEM_DOES_NOT_EXIST,
-                        HttpStatus.NOT_FOUND
-                );
-            }
-
             // Store the policy coverage in the map for quick access
             policyCoverages.put(damage.getCoverageId(), policyCoverage);
-
-            // Verify that the limit of the coverage is not exceeded
-            if (damage.getAmount().compareTo(policyCoverage.getLimit()) > 0) {
-                throw new ApiException(
-                        "The amount exceeds the limit of the coverage",
-                        ErrorCode.LIMIT_EXCEEDED,
-                        HttpStatus.BAD_REQUEST
-                );
-            }
         }
 
-        // Verify that the total claimed amount does not exceed the available policy balance
-        if (totalClaimedAmount.compareTo(policy.getBalance()) > 0) {
-            throw new ApiException(
-                    "The total claimed amount exceeds the available policy balance",
-                    ErrorCode.LIMIT_EXCEEDED,
-                    HttpStatus.BAD_REQUEST
-            );
+        // Apply Drools business rules to evaluate the claim creation
+        try (KieSession kieSession = kieContainer.newKieSession()) {
+            kieSession.insert(policy);
+            request.getDamages().forEach(kieSession::insert);
+            policyCoverages.forEach((id, policyCoverage) -> kieSession.insert(policyCoverage));
+            kieSession.insert(totalClaimedAmount);
+            kieSession.fireAllRules();
+            kieSession.dispose();
+        }
+        catch (ConsequenceException ce) {
+            Throwable cause = ce.getCause();
+
+            if (cause instanceof ApiException apiException) {
+                throw apiException;
+            } else {
+                throw new ApiException(
+                        "An unexpected error occurred while processing the information",
+                        ErrorCode.RUNTIME_ERROR,
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
         }
 
         // Create a new claim entity from the request body

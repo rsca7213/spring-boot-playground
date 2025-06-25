@@ -2,6 +2,7 @@ package com.playground.api.services;
 
 import com.playground.api.dtos.common.PaginationResponse;
 import com.playground.api.dtos.product.*;
+import com.playground.api.enums.CurrencyType;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.ApiException;
 import com.playground.api.integrations.ports.MultimediaStorageService;
@@ -10,6 +11,7 @@ import com.playground.api.entities.Product;
 import com.playground.api.repositories.MultimediaRepository;
 import com.playground.api.repositories.ProductRepository;
 import com.playground.api.repositories.specifications.ProductSpecifications;
+import com.playground.api.utils.CurrencyUtils;
 import com.playground.api.utils.MultimediaUtils;
 import com.playground.api.utils.PaginationUtils;
 import com.playground.api.utils.SpecificationUtils;
@@ -20,7 +22,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,18 +34,21 @@ public class ProductService {
     private final MultimediaRepository multimediaRepository;
     private final MultimediaStorageService multimediaStorageService;
     private final MultimediaUtils multimediaUtils;
+    private final CurrencyUtils currencyUtils;
 
     @Autowired
     public ProductService(
             final ProductRepository productRepository,
             final MultimediaRepository multimediaRepository,
             final MultimediaStorageService multimediaStorageService,
-            final MultimediaUtils multimediaUtils
+            final MultimediaUtils multimediaUtils,
+            final CurrencyUtils currencyUtils
     ) {
         this.productRepository = productRepository;
         this.multimediaRepository = multimediaRepository;
         this.multimediaStorageService = multimediaStorageService;
         this.multimediaUtils = multimediaUtils;
+        this.currencyUtils = currencyUtils;
     }
 
     public CreateProductResponse createProduct(CreateProductBody request) {
@@ -128,12 +135,15 @@ public class ProductService {
             throw new ApiException("A product with the given ID does not exist", ErrorCode.ITEM_DOES_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
 
+        // Obtain the product's price in different currencies
+        Map<CurrencyType, BigDecimal> currencyPrices = currencyUtils
+                .getPricesForCurrencies(CurrencyType.USD, BigDecimal.valueOf(product.getPrice()));
+
         // Return the product information
         return FindProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
                 .description(product.getDescription())
-                .price(product.getPrice())
                 .category(product.getCategory())
                 .stockQuantity(product.getStockQuantity())
                 .imageUrl(
@@ -141,6 +151,7 @@ public class ProductService {
                                 ? multimediaStorageService.generatePublicUrl(product.getMultimedia().getUri())
                                 : null
                 )
+                .price(currencyPrices)
                 .build();
     }
 

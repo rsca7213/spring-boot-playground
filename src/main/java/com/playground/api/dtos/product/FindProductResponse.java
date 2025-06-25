@@ -1,10 +1,13 @@
 package com.playground.api.dtos.product;
 
+import com.playground.api.enums.CurrencyType;
 import com.playground.api.enums.ProductCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Value;
 
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 
 @Value
@@ -30,12 +33,6 @@ public class FindProductResponse {
     String description;
 
     @Schema(
-            description = "Price of the product in USD",
-            example = "9.99"
-    )
-    Double price;
-
-    @Schema(
             description = "Category of the product",
             example = "FOOD"
     )
@@ -53,4 +50,11 @@ public class FindProductResponse {
             nullable = true
     )
     String imageUrl;
+
+    @Schema(
+            description = "The price of the product in different currencies",
+            example = "{\"USD\": 9.99, \"EUR\": 8.50, \"JPY\": 1100.00}",
+            nullable = true
+    )
+    Map<CurrencyType, BigDecimal> price;
 }

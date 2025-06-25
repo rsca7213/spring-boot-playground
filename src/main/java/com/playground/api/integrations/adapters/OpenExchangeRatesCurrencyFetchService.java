@@ -8,8 +8,10 @@ import com.playground.api.integrations.ports.CurrencyFetchService;
 import com.playground.api.integrations.ports.dtos.GetExchangeRatesResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -30,6 +32,11 @@ public class OpenExchangeRatesCurrencyFetchService implements CurrencyFetchServi
                         .queryParam("base", baseCurrency.name())
                         .build())
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, clientResponse -> Mono.error(new ApiException(
+                        "An error occurred while fetching exchange rates",
+                        ErrorCode.RUNTIME_ERROR,
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                )))
                 .bodyToMono(GetOpenExchangeRatesResponse.class)
                 .block();
 

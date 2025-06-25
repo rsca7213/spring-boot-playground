@@ -3,10 +3,12 @@ package com.playground.api.services;
 import com.playground.api.dtos.common.PaginationResponse;
 import com.playground.api.dtos.product.*;
 import com.playground.api.entities.Product;
+import com.playground.api.enums.CurrencyType;
 import com.playground.api.enums.ProductCategory;
 import com.playground.api.integrations.ports.MultimediaStorageService;
 import com.playground.api.repositories.MultimediaRepository;
 import com.playground.api.repositories.ProductRepository;
+import com.playground.api.utils.CurrencyUtils;
 import com.playground.api.utils.MultimediaUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,9 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
-import java.util.Optional;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTests {
@@ -39,6 +40,9 @@ public class ProductServiceTests {
 
     @Mock
     private MultimediaUtils multimediaUtils;
+
+    @Mock
+    private CurrencyUtils currencyUtils;
 
     @InjectMocks
     private ProductService productService;
@@ -62,6 +66,7 @@ public class ProductServiceTests {
     private final UUID uuid = UUID.randomUUID();
     private final String imageUrl = "https://example.com/image.jpg";
     private final String imageUri = "products/" + uuid + ".jpeg";
+    private Map<CurrencyType, BigDecimal> exchangeRates;
 
     @BeforeEach
     void setUp() {
@@ -73,6 +78,15 @@ public class ProductServiceTests {
         product.setCategory(ProductCategory.AUTOMOTIVE);
         product.setPrice(100.0);
         product.setStockQuantity(5);
+
+        // Set up exchange rates
+        exchangeRates = new HashMap<>();
+        exchangeRates.put(CurrencyType.USD, BigDecimal.valueOf(product.getPrice()));
+        exchangeRates.put(CurrencyType.EUR, BigDecimal.valueOf(product.getPrice() * 0.85));
+        exchangeRates.put(CurrencyType.GBP, BigDecimal.valueOf(product.getPrice() * 0.75));
+        exchangeRates.put(CurrencyType.JPY, BigDecimal.valueOf(product.getPrice() * 110));
+        exchangeRates.put(CurrencyType.CAD, BigDecimal.valueOf(product.getPrice() * 1.25));
+        exchangeRates.put(CurrencyType.AUD, BigDecimal.valueOf(product.getPrice() * 1.35));
 
         // Set up request DTOs
         createProductBody = CreateProductBody.builder()
@@ -124,9 +138,9 @@ public class ProductServiceTests {
                 .name(product.getName())
                 .description(product.getDescription())
                 .category(product.getCategory())
-                .price(product.getPrice())
                 .stockQuantity(product.getStockQuantity())
                 .imageUrl(null)
+                .price(exchangeRates)
                 .build();
 
         uploadProductImageResponse = UploadProductImageResponse.builder()
@@ -216,6 +230,14 @@ public class ProductServiceTests {
     void findProductById_Success() {
         // Mock the product repository to return the product by ID
         Mockito.when(productRepository.findById(uuid)).thenReturn(java.util.Optional.of(product));
+
+        // Mock the exchangeRates util to return the exchange rates
+        Mockito.when(
+                currencyUtils.getPricesForCurrencies(
+                        CurrencyType.USD,
+                        BigDecimal.valueOf(product.getPrice())
+                )
+        ).thenReturn(exchangeRates);
 
         // Call the findProductById method
         FindProductResponse response = productService.findProductById(uuid);

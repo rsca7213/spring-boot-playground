@@ -28,6 +28,9 @@ jobs:
       AWS_ACCESS_KEY: "test"
       AWS_SECRET_KEY: "test"
 
+      # Currency API Configuration
+      CURRENCY_APP_ID: "test"
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

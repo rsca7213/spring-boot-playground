@@ -6,15 +6,13 @@ import com.playground.api.entities.*;
 import com.playground.api.enums.ErrorCode;
 import com.playground.api.exceptions.ApiException;
 import com.playground.api.mappers.ClaimMapper;
-import com.playground.api.repositories.ClaimCoverageRepository;
-import com.playground.api.repositories.ClaimRepository;
-import com.playground.api.repositories.PolicyCoverageRepository;
-import com.playground.api.repositories.PolicyRepository;
+import com.playground.api.repositories.*;
 import com.playground.api.utils.ClaimUtils;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.client.api.response.ProcessInstanceResult;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
 import io.camunda.zeebe.spring.client.annotation.Variable;
+import io.camunda.zeebe.spring.common.exception.ZeebeBpmnError;
 import jakarta.transaction.Transactional;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
@@ -24,10 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ClaimService {
@@ -39,6 +34,7 @@ public class ClaimService {
     private final ClaimMapper claimMapper;
     private final KieContainer kieContainer;
     private final ZeebeClient zeebeClient;
+    private final CoverageRepository coverageRepository;
 
     @Autowired
     public ClaimService(
@@ -49,8 +45,8 @@ public class ClaimService {
             ClaimMapper claimMapper,
             KieContainer kieContainer,
             ZeebeClient zeebeClient,
-            PolicyCoverageRepository policyCoverageRepository
-    ) {
+            PolicyCoverageRepository policyCoverageRepository,
+            CoverageRepository coverageRepository) {
         this.claimRepository = claimRepository;
         this.claimCoverageRepository = claimCoverageRepository;
         this.policyRepository = policyRepository;
@@ -59,6 +55,7 @@ public class ClaimService {
         this.kieContainer = kieContainer;
         this.zeebeClient = zeebeClient;
         this.policyCoverageRepository = policyCoverageRepository;
+        this.coverageRepository = coverageRepository;
     }
 
     @Transactional
@@ -200,8 +197,7 @@ public class ClaimService {
             kieSession.insert(totalClaimedAmount);
             kieSession.fireAllRules();
             kieSession.dispose();
-        }
-        catch (ConsequenceException ce) {
+        } catch (ConsequenceException ce) {
             Throwable cause = ce.getCause();
 
             if (cause instanceof ApiException apiException) {
@@ -253,23 +249,23 @@ public class ClaimService {
 
     public Object createClaimCamunda(CreateClaimBody request) {
         ProcessInstanceResult eventResult = zeebeClient.newCreateInstanceCommand()
-                    .bpmnProcessId("create-claim-camunda")
-                    .latestVersion()
-                    .variables(Map.of(
-                                    "request", request
-                            )
-                    )
-                    .withResult()
-                    .send()
-                    .join();
+                .bpmnProcessId("create-claim-camunda")
+                .latestVersion()
+                .variables(Map.of(
+                                "request", request
+                        )
+                )
+                .withResult()
+                .send()
+                .join();
 
         Map<String, Object> variables = eventResult.getVariablesAsMap();
 
         if (variables.containsKey("error")) {
             throw new ApiException(
                     (String) variables.get("error"),
-                    ErrorCode.RUNTIME_ERROR,
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorCode.valueOf((String) variables.get("errorCode")),
+                    HttpStatus.valueOf((String) variables.get("httpCode"))
             );
         }
 
@@ -285,15 +281,21 @@ public class ClaimService {
     @Transactional
     public Map<String, Object> camundaFindClaimPolicyId(@Variable("policyId") Integer policyId) {
         Policy policy = policyRepository.findById(policyId).orElseThrow(
-                () -> new ApiException(
-                        "The policy with the given ID does not exist",
-                        ErrorCode.ITEM_DOES_NOT_EXIST,
-                        HttpStatus.NOT_FOUND
+                () -> new ZeebeBpmnError(
+                        "API_EXCEPTION",
+                        "API_EXCEPTION",
+                        Map.of(
+                                "error", String.format("The policy by the ID %s does not exist", policyId),
+                                "errorCode", ErrorCode.ITEM_DOES_NOT_EXIST.name(),
+                                "httpCode", HttpStatus.NOT_FOUND.name()
+                        )
                 )
         );
 
+
         List<PolicyCoverage> policyCoverages = policyCoverageRepository.findByPolicyId(policy.getId());
         Integer claimCount = claimRepository.countByPolicyId(policyId);
+
 
         return Map.of(
                 "policy", Map.of(
@@ -303,6 +305,7 @@ public class ClaimService {
                         "expirationDate", policy.getExpirationDate()
                 ),
                 "policyCoverages", policyCoverages.stream().map(pc -> Map.of(
+                        "name", pc.getCoverage().getName(),
                         "coverageId", pc.getCoverage().getId(),
                         "limit", pc.getLimit()
                 )).toList(),
@@ -312,7 +315,58 @@ public class ClaimService {
 
     @JobWorker(type = "claim-save-claim-creation-data")
     @Transactional
-    public Map<String, Object> generateCreateClaimResponse() {
-        return Map.of();
+    public Map<String, Object> camundaSaveCreateClaimData(
+            @Variable("request") CreateClaimBody request,
+            @Variable("policy") Policy policy,
+            @Variable("totalClaimedAmount") Double totalClaimedAmount,
+            @Variable("generatedClaimNumber") String generatedClaimNumber
+    ) {
+        // Reduce the policy balance by the total claimed amount
+        policy.setBalance(policy.getBalance().add(BigDecimal.valueOf(totalClaimedAmount).negate()));
+
+        // Save the policy with the updated balance
+        policyRepository.save(policy);
+
+        // Create a new claim entity from the request body
+        Claim claim = new Claim();
+        claim.setPolicy(policy);
+        claim.setClaimDate(request.getClaimDate());
+        claim.setNumber(generatedClaimNumber);
+        final Claim generatedClaim = claimRepository.save(claim);
+
+        // Find all relevant policy coverages
+        List<Coverage> coverages = coverageRepository.findAllById(
+                request.getDamages().stream()
+                        .map(CreateClaimBody.ClaimDamageItem::getCoverageId)
+                        .toList()
+        );
+
+        // Create ClaimCoverage entities for each damage in the claim
+        List<ClaimCoverage> claimCoverages = request.getDamages().stream()
+                .map(damage -> {
+                    ClaimCoverage claimCoverage = new ClaimCoverage();
+                    claimCoverage.setClaim(generatedClaim);
+                    claimCoverage.setAmount(damage.getAmount());
+                    claimCoverage.setCoverage(coverages.stream()
+                            .filter(c -> c.getId().equals(damage.getCoverageId()))
+                            .findFirst()
+                            .orElseThrow(() -> new ZeebeBpmnError(
+                                    "API_EXCEPTION",
+                                    "API_EXCEPTION",
+                                    Map.of(
+                                            "error", "Coverage not found for ID: " + damage.getCoverageId(),
+                                            "errorCode", ErrorCode.ITEM_DOES_NOT_EXIST.name(),
+                                            "httpCode", HttpStatus.NOT_FOUND.name()
+                                    )
+                            )));
+
+                    return claimCoverage;
+                }).toList();
+
+        claimCoverageRepository.saveAll(claimCoverages);
+
+        return Map.of(
+                "generatedClaimId", claim.getId()
+        );
     }
 }

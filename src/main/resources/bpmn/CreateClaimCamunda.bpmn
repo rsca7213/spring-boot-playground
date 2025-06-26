@@ -1,15 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0gijo4o" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.36.1" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.7.0">
   <bpmn:process id="create-claim-camunda" name="Create Claim Camunda Only" isExecutable="true">
-    <bpmn:startEvent id="start" name="Start Request">
+    <bpmn:sequenceFlow id="Flow_0l1om0y" name="A damage exceeds the coverage&#39;s limit" sourceRef="Gateway_1x247zw" targetRef="Event_0d9r6n4">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=some damage in request.damages satisfies
+  some coverage in policyCoverages satisfies
+    damage.coverageId = coverage.coverageId and damage.amount &gt; coverage.limit</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0qgib56" name="All damages are within coverage&#39;s limits" sourceRef="Gateway_1x247zw" targetRef="Activity_17ttx0g">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=every damage in request.damages satisfies
+  some coverage in policyCoverages satisfies
+    damage.coverageId = coverage.coverageId and damage.amount &lt;= coverage.limit</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:scriptTask id="Activity_0k18aps" name="Calculate Policy&#39;s Remaining Balance">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=policy.balance - totalClaimedAmount" resultVariable="remainingPolicyBalance" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0ifmva6</bpmn:incoming>
+      <bpmn:outgoing>Flow_0id98k9</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_0wfzmxx" name="Calculate Total Claimed Amount">
+      <bpmn:extensionElements>
+        <zeebe:script expression="=sum(request.damages.amount)" resultVariable="totalClaimedAmount" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1hhfvd1</bpmn:incoming>
+      <bpmn:outgoing>Flow_0oj60y3</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="error-1">
       <bpmn:extensionElements>
         <zeebe:ioMapping>
-          <zeebe:output source="=39235.70" target="exchangeRate" />
+          <zeebe:output source="=&#34;The claim amount is higher than the available policy balance&#34;" target="error" />
+          <zeebe:output source="=&#34;LIMIT_EXCEEDED&#34;" target="errorCode" />
+          <zeebe:output source="=&#34;BAD_REQUEST&#34;" target="httpCode" />
         </zeebe:ioMapping>
       </bpmn:extensionElements>
-      <bpmn:outgoing>Flow_1cc7t1g</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:sequenceFlow id="Flow_1cc7t1g" sourceRef="start" targetRef="find-policy-by-id" />
+      <bpmn:incoming>Flow_1ou4qr9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Event_0d9r6n4">
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;A coverage limit was excedeed by the claim&#34;" target="error" />
+          <zeebe:output source="=&#34;LIMIT_EXCEEDED&#34;" target="errorCode" />
+          <zeebe:output source="=&#34;BAD_REQUEST&#34;" target="httpCode" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0l1om0y</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Event_0js7b5h">
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="=error" target="error" />
+          <zeebe:output source="=errorCode" target="errorCode" />
+          <zeebe:output source="=httpCode" target="httpCode" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1f5j9t6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Event_0pr34zu" attachedToRef="find-policy-by-id">
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="=error" target="error" />
+          <zeebe:output source="=errorCode" target="errorCode" />
+          <zeebe:output source="=httpCode" target="httpCode" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_1f5j9t6</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0nww4eu" errorRef="Error_06cjir8" />
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="Event_0t1u2ec">
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;A policy coverage is not available&#34;" target="error" />
+          <zeebe:output source="=&#34;ITEM_DOES_NOT_EXIST&#34;" target="errorCode" />
+          <zeebe:output source="=&#34;NOT_FOUND&#34;" target="httpCode" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1ful8zi</bpmn:incoming>
+    </bpmn:endEvent>
     <bpmn:serviceTask id="find-policy-by-id" name="Find Policy by ID">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="claim-find-policy-by-id" />
@@ -20,81 +86,29 @@
       <bpmn:incoming>Flow_1cc7t1g</bpmn:incoming>
       <bpmn:outgoing>Flow_0ab9741</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:endEvent id="end" name="Send Response">
-      <bpmn:incoming>Flow_12nw9lq</bpmn:incoming>
-    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_05622xo" sourceRef="Activity_1lysy4h" targetRef="Activity_0fiil2f" />
     <bpmn:sequenceFlow id="Flow_0ab9741" sourceRef="find-policy-by-id" targetRef="Gateway_1d5d9e5" />
+    <bpmn:sequenceFlow id="Flow_0id98k9" sourceRef="Activity_0k18aps" targetRef="Activity_1lysy4h" />
+    <bpmn:sequenceFlow id="Flow_0ifmva6" sourceRef="Activity_17ttx0g" targetRef="Activity_0k18aps" />
+    <bpmn:sequenceFlow id="Flow_0oj60y3" sourceRef="Activity_0wfzmxx" targetRef="Gateway_0xez7g5" />
     <bpmn:sequenceFlow id="Flow_12nw9lq" sourceRef="Activity_0fiil2f" targetRef="end" />
-    <bpmn:scriptTask id="Activity_0wfzmxx" name="Calculate Total Claimed Amount">
-      <bpmn:extensionElements>
-        <zeebe:script expression="=sum(request.damages.amount)" resultVariable="totalClaimedAmount" />
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1hhfvd1</bpmn:incoming>
-      <bpmn:outgoing>Flow_0oj60y3</bpmn:outgoing>
-    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1cc7t1g" sourceRef="start" targetRef="find-policy-by-id" />
+    <bpmn:sequenceFlow id="Flow_1f5j9t6" sourceRef="Event_0pr34zu" targetRef="Event_0js7b5h" />
     <bpmn:exclusiveGateway id="Gateway_0xez7g5">
       <bpmn:incoming>Flow_0oj60y3</bpmn:incoming>
       <bpmn:outgoing>Flow_0ks9llk</bpmn:outgoing>
       <bpmn:outgoing>Flow_1ou4qr9</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_0oj60y3" sourceRef="Activity_0wfzmxx" targetRef="Gateway_0xez7g5" />
-    <bpmn:sequenceFlow id="Flow_0ks9llk" name="Policy balance can handle total claim amount" sourceRef="Gateway_0xez7g5" targetRef="Gateway_1x247zw">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=totalClaimedAmount &lt;= policy.balance</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
     <bpmn:exclusiveGateway id="Gateway_1d5d9e5">
       <bpmn:incoming>Flow_0ab9741</bpmn:incoming>
       <bpmn:outgoing>Flow_1hhfvd1</bpmn:outgoing>
       <bpmn:outgoing>Flow_1ful8zi</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_1hhfvd1" name="The policy has all required coverages" sourceRef="Gateway_1d5d9e5" targetRef="Activity_0wfzmxx">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=every id in request.damages.coverageId satisfies id in policyCoverages.coverageId</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_1ou4qr9" name="Total claimed amount exceeds policy balance" sourceRef="Gateway_0xez7g5" targetRef="error-1">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=totalClaimedAmount &gt;= policy.balance</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_1ful8zi" name="The policy does not have the coverages requested" sourceRef="Gateway_1d5d9e5" targetRef="Event_0t1u2ec">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=some id in request.damages.coverageId satisfies not(id in policyCoverages.coverageId)</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:endEvent id="Event_0t1u2ec">
-      <bpmn:extensionElements>
-        <zeebe:ioMapping>
-          <zeebe:output source="=&#34;A policy coverage is not available&#34;" target="error" />
-        </zeebe:ioMapping>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1ful8zi</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:endEvent id="error-1">
-      <bpmn:extensionElements>
-        <zeebe:ioMapping>
-          <zeebe:output source="=&#34;The claim amount is higher than the available policy balance&#34;" target="error" />
-        </zeebe:ioMapping>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1ou4qr9</bpmn:incoming>
-    </bpmn:endEvent>
     <bpmn:exclusiveGateway id="Gateway_1x247zw">
       <bpmn:incoming>Flow_0ks9llk</bpmn:incoming>
       <bpmn:outgoing>Flow_0qgib56</bpmn:outgoing>
       <bpmn:outgoing>Flow_0l1om0y</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_0qgib56" name="All damages are within coverage&#39;s limits" sourceRef="Gateway_1x247zw" targetRef="Activity_17ttx0g">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=every damage in request.damages satisfies
-  some coverage in policyCoverages satisfies
-    damage.coverageId = coverage.coverageId and damage.amount &lt;= coverage.limit</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:endEvent id="Event_0d9r6n4">
-      <bpmn:extensionElements>
-        <zeebe:ioMapping>
-          <zeebe:output source="=&#34;A coverage limit was excedeed by the claim&#34;" target="error" />
-        </zeebe:ioMapping>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0l1om0y</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_0l1om0y" name="A damage exceeds the coverage&#39;s limit" sourceRef="Gateway_1x247zw" targetRef="Event_0d9r6n4">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=some damage in request.damages satisfies
-  some coverage in policyCoverages satisfies
-    damage.coverageId = coverage.coverageId and damage.amount &gt; coverage.limit</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_0ifmva6" sourceRef="Activity_17ttx0g" targetRef="Activity_0k18aps" />
     <bpmn:scriptTask id="Activity_17ttx0g" name="Generate Claim Number">
       <bpmn:extensionElements>
         <zeebe:script expression="=replace(input: string(from: date(request.claimDate)), pattern: &#34;-&#34;, replacement: &#34;&#34;) + &#34;-&#34; + string(policy.id) + &#34;-&#34; + string(policyClaimCount + 1)" resultVariable="generatedClaimNumber" />
@@ -104,142 +118,185 @@
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_0fiil2f" name="Generate Response">
       <bpmn:extensionElements>
-        <zeebe:script expression="={&#10;  claimDetails: {&#10;    id: &#34;test&#34;,&#10;    number: generatedClaimNumber,&#10;    date: request.claimDate,&#10;    totalAmount: {&#10;      uf: totalClaimedAmount,&#10;      clp: totalClaimedAmount * exchangeRate&#10;    }&#10;  },&#10;  policyDetails: {&#10;    id: policy.id,&#10;    remainingBalance: {&#10;      uf: remainingPolicyBalance,&#10;      clp: remainingPolicyBalance * exchangeRate&#10;    }&#10;  }&#10;}&#10;" resultVariable="response" />
+        <zeebe:script expression="={&#10;  claimDetails: {&#10;    id: generatedClaimId,&#10;    number: generatedClaimNumber,&#10;    date: request.claimDate,&#10;    totalAmount: {&#10;      uf: totalClaimedAmount,&#10;      clp: totalClaimedAmount * exchangeRate&#10;    }&#10;  },&#10;  policyDetails: {&#10;    id: policy.id,&#10;    remainingBalance: {&#10;      uf: remainingPolicyBalance,&#10;      clp: remainingPolicyBalance * exchangeRate&#10;    }&#10;  },&#10;  damages: for damage in request.damages return {&#10;    coverageName: policyCoverages[item.coverageId = damage.coverageId][1].name,&#10;    amount: {&#10;      uf: damage.amount,&#10;      clp: damage.amount * exchangeRate&#10;    }&#10;  }&#10;}&#10;" resultVariable="response" />
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0id98k9</bpmn:incoming>
+      <bpmn:incoming>Flow_05622xo</bpmn:incoming>
       <bpmn:outgoing>Flow_12nw9lq</bpmn:outgoing>
     </bpmn:scriptTask>
-    <bpmn:sequenceFlow id="Flow_0id98k9" sourceRef="Activity_0k18aps" targetRef="Activity_0fiil2f" />
-    <bpmn:scriptTask id="Activity_0k18aps" name="Calculate Policy&#39;s Remaining Balance">
+    <bpmn:sequenceFlow id="Flow_0ks9llk" name="Policy balance can handle total claim amount" sourceRef="Gateway_0xez7g5" targetRef="Gateway_1x247zw">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=totalClaimedAmount &lt;= policy.balance</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_1lysy4h" name="Save New Claim Information">
       <bpmn:extensionElements>
-        <zeebe:script expression="=policy.balance - totalClaimedAmount" resultVariable="remainingPolicyBalance" />
+        <zeebe:taskDefinition type="claim-save-claim-creation-data" />
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0ifmva6</bpmn:incoming>
-      <bpmn:outgoing>Flow_0id98k9</bpmn:outgoing>
-    </bpmn:scriptTask>
+      <bpmn:incoming>Flow_0id98k9</bpmn:incoming>
+      <bpmn:outgoing>Flow_05622xo</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end" name="Send Response">
+      <bpmn:incoming>Flow_12nw9lq</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="start" name="Start Request">
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="=39235.70" target="exchangeRate" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_1cc7t1g</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1ful8zi" name="The policy does not have the coverages requested" sourceRef="Gateway_1d5d9e5" targetRef="Event_0t1u2ec">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=some id in request.damages.coverageId satisfies not(id in policyCoverages.coverageId)</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1hhfvd1" name="The policy has all required coverages" sourceRef="Gateway_1d5d9e5" targetRef="Activity_0wfzmxx">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=every id in request.damages.coverageId satisfies id in policyCoverages.coverageId</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1ou4qr9" name="Total claimed amount exceeds policy balance" sourceRef="Gateway_0xez7g5" targetRef="error-1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=totalClaimedAmount &gt;= policy.balance</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
   </bpmn:process>
   <bpmn:error id="Error_1nstf3k" name="ClaimAmountIsHigherThanPolicyBalance" errorCode="claim-amount-is-higher-than-policy-balance" />
   <bpmn:error id="Error_0ub79zl" name="PolicyCoverageNotFound" errorCode="policy-coverage-not-found" />
+  <bpmn:error id="Error_06cjir8" name="API_EXCEPTION" errorCode="API_EXCEPTION" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="create-claim-camunda">
       <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="start">
-        <dc:Bounds x="172" y="102" width="36" height="36" />
+        <dc:Bounds x="172" y="222" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="156" y="145" width="69" height="14" />
+          <dc:Bounds x="156" y="265" width="69" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_091w3jq_di" bpmnElement="find-policy-by-id">
-        <dc:Bounds x="290" y="80" width="100" height="80" />
+        <dc:Bounds x="290" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0yu4p09_di" bpmnElement="end">
+        <dc:Bounds x="1902" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1881" y="265" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1dsv07d_di" bpmnElement="Activity_0wfzmxx">
+        <dc:Bounds x="620" y="200" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0xez7g5_di" bpmnElement="Gateway_0xez7g5" isMarkerVisible="true">
+        <dc:Bounds x="795" y="215" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1d5d9e5_di" bpmnElement="Gateway_1d5d9e5" isMarkerVisible="true">
-        <dc:Bounds x="465" y="95" width="50" height="50" />
+        <dc:Bounds x="465" y="215" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1pt4e1v_di" bpmnElement="Event_0t1u2ec">
-        <dc:Bounds x="472" y="212" width="36" height="36" />
+        <dc:Bounds x="472" y="332" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="487" y="261" width="86" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1dsv07d_di" bpmnElement="Activity_0wfzmxx">
-        <dc:Bounds x="620" y="80" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0xez7g5_di" bpmnElement="Gateway_0xez7g5" isMarkerVisible="true">
-        <dc:Bounds x="795" y="95" width="50" height="50" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0sechku_di" bpmnElement="error-1">
-        <dc:Bounds x="802" y="212" width="36" height="36" />
+        <dc:Bounds x="802" y="332" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="877" y="255" width="86" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1x247zw_di" bpmnElement="Gateway_1x247zw" isMarkerVisible="true">
-        <dc:Bounds x="975" y="95" width="50" height="50" />
+        <dc:Bounds x="975" y="215" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0d9r6n4_di" bpmnElement="Event_0d9r6n4">
-        <dc:Bounds x="982" y="212" width="36" height="36" />
+        <dc:Bounds x="982" y="332" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0cbex1r_di" bpmnElement="Activity_17ttx0g">
-        <dc:Bounds x="1140" y="80" width="100" height="80" />
+        <dc:Bounds x="1140" y="200" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1e2ofde_di" bpmnElement="Activity_0fiil2f">
-        <dc:Bounds x="1560" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1k7swdy_di" bpmnElement="Activity_0k18aps">
-        <dc:Bounds x="1350" y="80" width="100" height="80" />
+        <dc:Bounds x="1350" y="200" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0yu4p09_di" bpmnElement="end">
-        <dc:Bounds x="1902" y="102" width="36" height="36" />
+      <bpmndi:BPMNShape id="Activity_1e2ofde_di" bpmnElement="Activity_0fiil2f">
+        <dc:Bounds x="1710" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0mgkmss_di" bpmnElement="Activity_1lysy4h">
+        <dc:Bounds x="1530" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_165w7w5" bpmnElement="Event_0js7b5h">
+        <dc:Bounds x="322" y="82" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1881" y="145" width="79" height="14" />
+          <dc:Bounds x="487" y="261" width="86" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0pr34zu_di" bpmnElement="Event_0pr34zu">
+        <dc:Bounds x="322" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1cc7t1g_di" bpmnElement="Flow_1cc7t1g">
+        <di:waypoint x="208" y="240" />
+        <di:waypoint x="290" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ab9741_di" bpmnElement="Flow_0ab9741">
+        <di:waypoint x="390" y="240" />
+        <di:waypoint x="465" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12nw9lq_di" bpmnElement="Flow_12nw9lq">
+        <di:waypoint x="1810" y="240" />
+        <di:waypoint x="1902" y="240" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1hhfvd1_di" bpmnElement="Flow_1hhfvd1">
-        <di:waypoint x="515" y="120" />
-        <di:waypoint x="620" y="120" />
+        <di:waypoint x="515" y="240" />
+        <di:waypoint x="620" y="240" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="517" y="70" width="85" height="40" />
+          <dc:Bounds x="517" y="190" width="85" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0oj60y3_di" bpmnElement="Flow_0oj60y3">
-        <di:waypoint x="720" y="120" />
-        <di:waypoint x="795" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1ou4qr9_di" bpmnElement="Flow_1ou4qr9">
-        <di:waypoint x="820" y="145" />
-        <di:waypoint x="820" y="212" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="729" y="150" width="82" height="40" />
-        </bpmndi:BPMNLabel>
+        <di:waypoint x="720" y="240" />
+        <di:waypoint x="795" y="240" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0ks9llk_di" bpmnElement="Flow_0ks9llk">
-        <di:waypoint x="845" y="120" />
-        <di:waypoint x="975" y="120" />
+        <di:waypoint x="845" y="240" />
+        <di:waypoint x="975" y="240" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="860" y="70" width="79" height="40" />
+          <dc:Bounds x="860" y="190" width="79" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_12nw9lq_di" bpmnElement="Flow_12nw9lq">
-        <di:waypoint x="1660" y="120" />
-        <di:waypoint x="1902" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1cc7t1g_di" bpmnElement="Flow_1cc7t1g">
-        <di:waypoint x="208" y="120" />
-        <di:waypoint x="290" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0ab9741_di" bpmnElement="Flow_0ab9741">
-        <di:waypoint x="390" y="120" />
-        <di:waypoint x="465" y="120" />
+      <bpmndi:BPMNEdge id="Flow_1ou4qr9_di" bpmnElement="Flow_1ou4qr9">
+        <di:waypoint x="820" y="265" />
+        <di:waypoint x="820" y="332" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="729" y="270" width="82" height="40" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1ful8zi_di" bpmnElement="Flow_1ful8zi">
-        <di:waypoint x="490" y="145" />
-        <di:waypoint x="490" y="212" />
+        <di:waypoint x="490" y="265" />
+        <di:waypoint x="490" y="332" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="401" y="143" width="77" height="53" />
+          <dc:Bounds x="401" y="263" width="77" height="53" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0qgib56_di" bpmnElement="Flow_0qgib56">
-        <di:waypoint x="1025" y="120" />
-        <di:waypoint x="1140" y="120" />
+        <di:waypoint x="1025" y="240" />
+        <di:waypoint x="1140" y="240" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1038" y="70" width="84" height="40" />
+          <dc:Bounds x="1038" y="190" width="84" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0l1om0y_di" bpmnElement="Flow_0l1om0y">
-        <di:waypoint x="1000" y="145" />
-        <di:waypoint x="1000" y="212" />
+        <di:waypoint x="1000" y="265" />
+        <di:waypoint x="1000" y="332" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="911" y="153" width="77" height="40" />
+          <dc:Bounds x="911" y="273" width="77" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0ifmva6_di" bpmnElement="Flow_0ifmva6">
-        <di:waypoint x="1240" y="120" />
-        <di:waypoint x="1350" y="120" />
+        <di:waypoint x="1240" y="240" />
+        <di:waypoint x="1350" y="240" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0id98k9_di" bpmnElement="Flow_0id98k9">
-        <di:waypoint x="1450" y="120" />
-        <di:waypoint x="1560" y="120" />
+        <di:waypoint x="1450" y="240" />
+        <di:waypoint x="1530" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05622xo_di" bpmnElement="Flow_05622xo">
+        <di:waypoint x="1630" y="240" />
+        <di:waypoint x="1710" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1f5j9t6_di" bpmnElement="Flow_1f5j9t6">
+        <di:waypoint x="340" y="182" />
+        <di:waypoint x="340" y="118" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

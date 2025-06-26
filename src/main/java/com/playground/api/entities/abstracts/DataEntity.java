@@ -31,6 +31,7 @@ public abstract class DataEntity implements Serializable {
 
     @PreUpdate
     private void preUpdate() {
+        this.createdAt = this.createdAt != null ? this.createdAt : LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 }

@@ -6,12 +6,13 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @MappedSuperclass
 @Getter
 @Setter
-public abstract class DataEntity {
+public abstract class DataEntity implements Serializable {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

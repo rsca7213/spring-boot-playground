@@ -2,7 +2,6 @@ package com.playground.api.controllers;
 
 import com.playground.api.dtos.claims.CreateClaimBody;
 import com.playground.api.dtos.claims.CreateClaimQuery;
-import com.playground.api.dtos.claims.CreateClaimResponse;
 import com.playground.api.services.ClaimService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -32,7 +31,7 @@ public class ClaimController {
     )
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
-    public ResponseEntity<CreateClaimResponse> createClaim(
+    public ResponseEntity<Object> createClaim(
             @Valid @RequestBody CreateClaimBody createClaimBody,
             @ModelAttribute CreateClaimQuery requestQuery
     ) {

@@ -53,6 +53,13 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+	// Drools
+	implementation 'org.drools:drools-rules-spring-boot-starter:10.0.0'
+	implementation 'org.drools:drools-mvel:10.0.0'
+
+	// Camunda
+	implementation 'io.camunda:spring-boot-starter-camunda-sdk:8.7.6'
 }
 
 tasks.named('test', Test) {

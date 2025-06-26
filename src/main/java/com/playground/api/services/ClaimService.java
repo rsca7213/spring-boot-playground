@@ -11,6 +11,9 @@ import com.playground.api.repositories.ClaimRepository;
 import com.playground.api.repositories.PolicyRepository;
 import com.playground.api.utils.ClaimUtils;
 import jakarta.transaction.Transactional;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.ConsequenceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,7 @@ public class ClaimService {
     private final PolicyRepository policyRepository;
     private final ClaimUtils claimUtils;
     private final ClaimMapper claimMapper;
+    private final KieContainer kieContainer;
 
     @Autowired
     public ClaimService(
@@ -35,13 +39,15 @@ public class ClaimService {
             ClaimCoverageRepository claimCoverageRepository,
             PolicyRepository policyRepository,
             ClaimUtils claimUtils,
-            ClaimMapper claimMapper
+            ClaimMapper claimMapper,
+            KieContainer kieContainer
     ) {
         this.claimRepository = claimRepository;
         this.claimCoverageRepository = claimCoverageRepository;
         this.policyRepository = policyRepository;
         this.claimUtils = claimUtils;
         this.claimMapper = claimMapper;
+        this.kieContainer = kieContainer;
     }
 
     @Transactional
@@ -139,5 +145,112 @@ public class ClaimService {
 
         // Return the claim response object
         return claimMapper.claimToCreateClaimResponse(generatedClaim, totalClaimedAmount);
+    }
+
+    @Transactional
+    public CreateClaimResponse createClaimDrools(CreateClaimBody request) {
+        BigDecimal totalClaimedAmount = BigDecimal.ZERO;
+
+        // Verify that the policy exists
+        Policy policy = policyRepository.findById(request.getPolicyId()).orElseThrow(
+                () -> new ApiException(
+                        "The policy with the given ID does not exist",
+                        ErrorCode.ITEM_DOES_NOT_EXIST,
+                        HttpStatus.NOT_FOUND
+                )
+        );
+
+        // Count the number of claims for the policy
+        Integer claimCount = claimRepository.countByPolicyId(policy.getId());
+
+        // Generate a Map for each PolicyCoverage to quickly access it by coverage ID
+        Map<Integer, PolicyCoverage> policyCoverages = new HashMap<>();
+
+        // Verify each coverage reported damage in the claim
+        for (CreateClaimBody.ClaimDamageItem damage : request.getDamages()) {
+            // Update the total claimed amount
+            totalClaimedAmount = totalClaimedAmount.add(damage.getAmount());
+
+            // Get the policy coverage associated with the policy
+            PolicyCoverage policyCoverage = policy.getCoverages().stream()
+                    .filter(pc -> pc.getCoverage().getId().equals(damage.getCoverageId()))
+                    .findFirst()
+                    .orElse(null);
+
+            // Store the policy coverage in the map for quick access
+            policyCoverages.put(damage.getCoverageId(), policyCoverage);
+        }
+
+        System.out.println("Applying Drools rules to evaluate the claim creation...");
+
+        // Apply Drools business rules to evaluate the claim creation
+        try (KieSession kieSession = kieContainer.newKieSession()) {
+            kieSession.insert(policy);
+            request.getDamages().forEach(kieSession::insert);
+            policyCoverages.forEach((id, policyCoverage) -> kieSession.insert(policyCoverage));
+            kieSession.insert(totalClaimedAmount);
+            kieSession.fireAllRules();
+            kieSession.dispose();
+        }
+        catch (ConsequenceException ce) {
+            Throwable cause = ce.getCause();
+
+            System.out.println("Error found on Drools: " + cause.getClass().getName());
+
+            if (cause instanceof ApiException apiException) {
+                throw apiException;
+            } else {
+                throw new ApiException(
+                        "An unexpected error occurred while processing the information",
+                        ErrorCode.RUNTIME_ERROR,
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+        }
+
+        // Create a new claim entity from the request body
+        Claim claim = new Claim();
+
+        claim.setPolicy(policy);
+        claim.setClaimDate(request.getClaimDate());
+        claim.setNumber(claimUtils.generateClaimNumber(policy.getId(), request.getClaimDate(), claimCount));
+
+        // Create ClaimCoverage entities for each damage in the claim
+        List<ClaimCoverage> claimCoverages = request.getDamages().stream()
+                .map(damage -> {
+                    ClaimCoverage claimCoverage = new ClaimCoverage();
+                    claimCoverage.setClaim(claim);
+                    claimCoverage.setAmount(damage.getAmount());
+                    claimCoverage.setCoverage(policyCoverages.get(damage.getCoverageId()).getCoverage());
+
+                    return claimCoverage;
+                }).toList();
+
+        // Save the claim entity to the repository
+        final Claim generatedClaim = claimRepository.save(claim);
+
+        // Assign the coverages to the claim
+        claimCoverages.forEach(claimCoverage -> claimCoverage.setClaim(generatedClaim));
+        generatedClaim.setCoverages(new HashSet<>(claimCoverages));
+
+        // Save the claim coverages to the repository
+        claimCoverageRepository.saveAll(claimCoverages);
+
+        // Reduce the policy balance by the total claimed amount
+        policy.setBalance(policy.getBalance().add(totalClaimedAmount.negate()));
+        policyRepository.save(policy);
+
+        // Return the claim response object
+        return claimMapper.claimToCreateClaimResponse(generatedClaim, totalClaimedAmount);
+    }
+
+    @Transactional
+    public CreateClaimResponse createClaimCamunda(CreateClaimBody request) {
+        return CreateClaimResponse.builder().build();
+    }
+
+    @Transactional
+    public CreateClaimResponse createClaimDroolsAndCamunda(CreateClaimBody request) {
+        return CreateClaimResponse.builder().build();
     }
 }

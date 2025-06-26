@@ -1,6 +1,7 @@
 package com.playground.api.controllers;
 
 import com.playground.api.dtos.claims.CreateClaimBody;
+import com.playground.api.dtos.claims.CreateClaimQuery;
 import com.playground.api.dtos.claims.CreateClaimResponse;
 import com.playground.api.services.ClaimService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,10 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/claims")
@@ -34,7 +32,17 @@ public class ClaimController {
     )
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
-    public ResponseEntity<CreateClaimResponse> createClaim(@Valid @RequestBody CreateClaimBody createClaimBody) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(claimService.createClaim(createClaimBody));
+    public ResponseEntity<CreateClaimResponse> createClaim(
+            @Valid @RequestBody CreateClaimBody createClaimBody,
+            @ModelAttribute CreateClaimQuery requestQuery
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                switch (requestQuery.getProcess()) {
+                    case STANDARD -> claimService.createClaim(createClaimBody);
+                    case DROOLS_CAMUNDA -> claimService.createClaimDroolsAndCamunda(createClaimBody);
+                    case CAMUNDA -> claimService.createClaimCamunda(createClaimBody);
+                    case DROOLS -> claimService.createClaimDrools(createClaimBody);
+                }
+        );
     }
 }

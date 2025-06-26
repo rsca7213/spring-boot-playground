@@ -1,0 +1,47 @@
+import com.playground.api.entities.Policy;
+import com.playground.api.entities.PolicyCoverage;
+import com.playground.api.dtos.claims.CreateClaimBody.ClaimDamageItem
+import com.playground.api.exceptions.ApiException
+import com.playground.api.enums.ErrorCode
+import org.springframework.http.HttpStatus;
+import java.math.BigDecimal;
+
+rule "Verify that each damage from the claim exists in the policy"
+    when
+        $policy : Policy()
+        $damage : ClaimDamageItem()
+        not (PolicyCoverage(coverage.getId() == $damage.getCoverageId()) from $policy.coverages)
+    then
+        throw new ApiException(
+                "Coverage with ID " + $damage.getCoverageId() + " does not exist in the policy",
+                ErrorCode.ITEM_DOES_NOT_EXIST,
+                HttpStatus.NOT_FOUND
+        );
+end
+
+rule "Each damage item must not exceed the maximum coverage limit amount"
+    when
+        $policy : Policy()
+        $damage : ClaimDamageItem($amount : getAmount())
+        $coverage : PolicyCoverage(coverage.getId() == $damage.getCoverageId(), getLimit() > 0)
+        eval($amount.compareTo($coverage.getLimit()) > 0)
+    then
+        throw new ApiException(
+                "Claim damage amount of " + $amount + " exceeds maximum coverage limit of " + $coverage.getLimit(),
+                ErrorCode.LIMIT_EXCEEDED,
+                HttpStatus.BAD_REQUEST
+        );
+end
+
+rule "Verify that the total claim amount does not exceed the policy balance"
+    when
+        $policy : Policy($balance : getBalance())
+        $totalClaimedAmount : BigDecimal()
+        eval($totalClaimedAmount.compareTo($balance) > 0)
+    then
+        throw new ApiException(
+                "Total claim amount of " + $totalClaimedAmount + " exceeds policy balance of " + $balance,
+                ErrorCode.LIMIT_EXCEEDED,
+                HttpStatus.BAD_REQUEST
+        );
+end

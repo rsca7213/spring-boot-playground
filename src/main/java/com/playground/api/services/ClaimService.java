@@ -181,8 +181,6 @@ public class ClaimService {
             policyCoverages.put(damage.getCoverageId(), policyCoverage);
         }
 
-        System.out.println("Applying Drools rules to evaluate the claim creation...");
-
         // Apply Drools business rules to evaluate the claim creation
         try (KieSession kieSession = kieContainer.newKieSession()) {
             kieSession.insert(policy);
@@ -194,8 +192,6 @@ public class ClaimService {
         }
         catch (ConsequenceException ce) {
             Throwable cause = ce.getCause();
-
-            System.out.println("Error found on Drools: " + cause.getClass().getName());
 
             if (cause instanceof ApiException apiException) {
                 throw apiException;

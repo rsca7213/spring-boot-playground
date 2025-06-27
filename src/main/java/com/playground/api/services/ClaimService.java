@@ -272,11 +272,6 @@ public class ClaimService {
         return variables.get("response");
     }
 
-    @Transactional
-    public CreateClaimResponse createClaimDroolsAndCamunda(CreateClaimBody request) {
-        return CreateClaimResponse.builder().build();
-    }
-
     @JobWorker(type = "claim-find-policy-by-id")
     @Transactional
     public Map<String, Object> camundaFindClaimPolicyId(@Variable("policyId") Integer policyId) {

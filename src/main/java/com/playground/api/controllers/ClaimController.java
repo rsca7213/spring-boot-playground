@@ -38,7 +38,6 @@ public class ClaimController {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 switch (requestQuery.getProcess()) {
                     case STANDARD -> claimService.createClaim(createClaimBody);
-                    case DROOLS_CAMUNDA -> claimService.createClaimDroolsAndCamunda(createClaimBody);
                     case CAMUNDA -> claimService.createClaimCamunda(createClaimBody);
                     case DROOLS -> claimService.createClaimDrools(createClaimBody);
                 }

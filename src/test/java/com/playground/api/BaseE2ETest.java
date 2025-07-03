@@ -40,10 +40,10 @@ public class BaseE2ETest {
         RestAssured.basePath = "/api";
     }
 
-    private String obtainAuthCookie(String email, String password) {
+    private String obtainAuthCookie(String email) {
         return RestAssured.given()
                 .contentType(ContentType.JSON)
-                .body("{\"email\": \"" + email + "\", \"password\": \"" + password + "\"}")
+                .body("{\"email\": \"" + email + "\", \"password\": \"" + BaseE2ETest.TEST_PASSWORD + "\"}")
                 .when()
                 .post("/auth/login")
                 .then()
@@ -54,7 +54,7 @@ public class BaseE2ETest {
 
     protected String obtainAdminAccessToken() {
         if (adminAccessToken == null) {
-            adminAccessToken = obtainAuthCookie(ADMIN_EMAIL, TEST_PASSWORD);
+            adminAccessToken = obtainAuthCookie(ADMIN_EMAIL);
         }
 
         return adminAccessToken;
@@ -62,7 +62,7 @@ public class BaseE2ETest {
 
     protected String obtainClientAccessToken() {
         if (clientAccessToken == null) {
-            clientAccessToken = obtainAuthCookie(CLIENT_EMAIL, TEST_PASSWORD);
+            clientAccessToken = obtainAuthCookie(CLIENT_EMAIL);
         }
 
         return clientAccessToken;
